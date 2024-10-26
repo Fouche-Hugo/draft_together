@@ -4,15 +4,25 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = { workspace = true }
 axum = { workspace = true, features = ["ws"] }
 axum-extra = { workspace = true, features = ["typed-header"] }
+flate2 = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
 headers = { workspace = true }
-tokio = { workspace = true, features = [
-    "macros",
-    "rt-multi-thread",
+reqwest = { workspace = true, features = [
+    "rustls-tls",
+    "http2",
+    "charset",
+    "json",
 ] }
+semver = { workspace = true }
+serde_json = { workspace = true }
+tar = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tower-http = { workspace = true, features = ["fs", "trace"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-tower-http = { workspace = true, features = ["fs", "trace"] }
+draft_together_data = { path = "../data" }
+thiserror = { workspace = true }

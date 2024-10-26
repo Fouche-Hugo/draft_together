@@ -1,3 +1,4 @@
+use draft_together_data::Draft;
 use futures_util::{SinkExt, StreamExt};
 use std::io::BufRead;
 use tokio::runtime::Handle;
@@ -33,15 +34,18 @@ async fn spawn_client(who: usize) {
         let mut buffer = String::new();
         let mut stdin = std::io::stdin().lock();
 
-        while let Ok(_) = stdin.read_line(&mut buffer) {
+        while stdin.read_line(&mut buffer).is_ok() {
             buffer.pop();
             println!("stdin: {}", buffer);
 
-            handle.block_on(async {
-                if let Err(e) = sender.send(Message::Text(buffer.clone())).await {
-                    println!("Could not send {buffer} to server: {e}");
-                }
-            });
+            let send_result =
+                handle.block_on(async { sender.send(Message::Text(buffer.clone())).await });
+
+            if let Err(e) = send_result {
+                println!("failed to send data to server: {e}");
+                break;
+            }
+
             buffer.clear();
         }
     });
@@ -51,8 +55,19 @@ async fn spawn_client(who: usize) {
             // print message and break if instructed to do so
             println!("Message received from server: {msg}");
 
-            if let Message::Close(_) = msg {
-                break;
+            match msg {
+                Message::Close(_) => break,
+                Message::Text(msg) => {
+                    let draft: Draft = match serde_json::from_str(&msg) {
+                        Ok(draft) => draft,
+                        Err(e) => {
+                            println!("failed to deserialize message as draft: {e}");
+                            break;
+                        }
+                    };
+                    println!("current draft state: {}", draft.display());
+                }
+                _ => {}
             }
         }
     });
