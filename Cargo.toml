@@ -1,13 +1,14 @@
-[package]
-name = "draft_together"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = [ "client","server"]
 
-[dependencies]
-axum = { version = "0.7.7", features = ["ws"] }
-tokio = { version = "1.41.0", default-features = false, features = [
-    "macros",
-    "rt-multi-thread",
-] }
+[workspace.dependencies]
+axum = "0.7.7"
+axum-extra = "0.9.4"
+futures = "0.3.31"
+futures-util = "0.3.31"
+headers = "0.4"
+tokio = "1.41.0"
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tracing-subscriber = "0.3.18"
+tokio-tungstenite = "0.24.0"
+tower-http = "0.6.1"
