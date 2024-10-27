@@ -5,5 +5,6 @@
     clippy
     rustfmt
     rustc
+    docker
   ];
 }

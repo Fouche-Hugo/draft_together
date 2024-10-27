@@ -1,0 +1,12 @@
+services:
+  database:
+    image: postgres:17-bookworm
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  
+  app:
+    image: rust:1-bookworm
+    volumes:
+      - .:/draft_together
+    command: sh -c "cd draft_together && cargo run -p draft_together_server"
