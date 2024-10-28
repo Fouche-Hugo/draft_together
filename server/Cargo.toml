@@ -26,3 +26,4 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 draft_together_data = { path = "../data" }
 thiserror = { workspace = true }
+sqlx = { workspace = true, features = ["postgres", "runtime-tokio"] }

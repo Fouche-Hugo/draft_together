@@ -13,4 +13,6 @@ services:
     image: rust:1-bookworm
     volumes:
       - .:/draft_together
+    environment:
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
     command: sh -c "cd draft_together && cargo run -p draft_together_server"

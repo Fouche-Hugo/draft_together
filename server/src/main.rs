@@ -8,15 +8,13 @@ use axum::{
     Router,
 };
 use axum_extra::TypedHeader;
+use database::ChampionDatabaseInsertion;
 use draft_together_data::{ChampionUpdate, Draft};
+use sqlx::postgres::PgPoolOptions;
 use tokio::sync::Mutex;
-use tracing::info;
+use tracing::{error, info};
 
-use std::{
-    net::SocketAddr,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::{env, net::SocketAddr, path::PathBuf, sync::Arc};
 use tower_http::{
     services::ServeDir,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -28,6 +26,7 @@ use axum::extract::connect_info::ConnectInfo;
 
 use futures::{sink::SinkExt, stream::StreamExt};
 
+mod database;
 mod league_data;
 
 #[derive(Debug, Default, Clone)]
@@ -74,6 +73,44 @@ async fn main() {
     let extract_data_result =
         league_data::extract_data_from_ddragon(decompressed_path, &extracted_path, &latest_version);
     info!(?extract_data_result);
+    let champions_data_dragon = extract_data_result.unwrap();
+
+    let database_password = env::var("DATABASE_PASSWORD").unwrap_or("default_password".to_string());
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&format!(
+            "postgres://draft_together:{database_password}@database/draft_together"
+        ))
+        .await
+        .unwrap();
+
+    for champion in champions_data_dragon {
+        let champion_exists_result = database::champion_exists(&pool, &champion.riot_id).await;
+
+        match champion_exists_result {
+            Ok(exists) => {
+                if exists {
+                    let champion_database = ChampionDatabaseInsertion {
+                        riot_id: champion.riot_id,
+                        name: champion.name,
+                        default_skin_image_path: champion.default_skin_image_path,
+                        centered_default_skin_image_path: champion.centered_default_skin_image_path,
+                    };
+                    let insert_result = database::insert_champion(&pool, &champion_database).await;
+                    info!(
+                        "{} inserted into database: {insert_result:?}",
+                        champion_database.name
+                    );
+                } else {
+                    info!(
+                        "champion {} already exists in database, skipping insertion",
+                        champion.name
+                    );
+                }
+            }
+            Err(e) => error!("error while checking if {} exists: {e}", champion.name),
+        }
+    }
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await

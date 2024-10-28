@@ -53,7 +53,7 @@ pub fn extract_data_from_ddragon(
     ddragon_path: impl AsRef<Path>,
     output_path: impl AsRef<Path>,
     version: &Version,
-) -> Result<()> {
+) -> Result<Vec<ChampionDataDragon>> {
     let ddragon_path = ddragon_path.as_ref();
     let champions_json_path = ddragon_path.join(format!("{version}/data/en_US/championFull.json"));
     info!(?champions_json_path);
@@ -71,29 +71,29 @@ pub fn extract_data_from_ddragon(
     std::fs::copy(champions_json_path, &output_path_champion_json)?;
     let champions_riot = parse_champion_json(output_path_champion_json)?;
 
-    for champion in champions_riot {
+    for champion in &champions_riot {
         let champion_centered_path = ddragon_path
             .join("img/champion/centered")
-            .join(&champion.centered_default_skin_image);
+            .join(&champion.centered_default_skin_image_path);
 
-        if champion.id == "Fiddlesticks" {
+        if champion.riot_id == "Fiddlesticks" {
             correct_fiddlesticks_image_name(&champion_centered_path)?;
         }
 
         std::fs::copy(
             &champion_centered_path,
-            image_output_path.join(champion.centered_default_skin_image),
+            image_output_path.join(&champion.centered_default_skin_image_path),
         )?;
         std::fs::copy(
             ddragon_path
                 .join(version.to_string())
                 .join("img/champion")
-                .join(&champion.default_skin_image),
-            image_output_path.join(champion.default_skin_image),
+                .join(&champion.default_skin_image_path),
+            image_output_path.join(&champion.default_skin_image_path),
         )?;
     }
 
-    Ok(())
+    Ok(champions_riot)
 }
 
 fn correct_fiddlesticks_image_name(path_from_data_dragon: impl AsRef<Path>) -> Result<()> {
@@ -131,10 +131,10 @@ enum ChampionJsonParsingError {
 
 #[derive(Debug, Clone)]
 pub struct ChampionDataDragon {
-    id: String,
-    name: String,
-    default_skin_image: String,
-    centered_default_skin_image: String,
+    pub riot_id: String,
+    pub name: String,
+    pub default_skin_image_path: String,
+    pub centered_default_skin_image_path: String,
 }
 
 fn parse_champion_json(path_champion_json: impl AsRef<Path>) -> Result<Vec<ChampionDataDragon>> {
@@ -185,9 +185,9 @@ fn parse_champion_json(path_champion_json: impl AsRef<Path>) -> Result<Vec<Champ
         trace!("{field} champion default skin num: {default_skin_num}");
 
         champions_riot_data.push(ChampionDataDragon {
-            id: id.to_string(),
-            centered_default_skin_image: format!("{id}_{default_skin_num}.jpg"),
-            default_skin_image: image_full.to_string(),
+            riot_id: id.to_string(),
+            centered_default_skin_image_path: format!("{id}_{default_skin_num}.jpg"),
+            default_skin_image_path: image_full.to_string(),
             name: name.to_string(),
         })
     }
