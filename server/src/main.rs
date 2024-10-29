@@ -14,7 +14,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio::sync::Mutex;
 use tracing::{debug, error, info, trace};
 
-use std::{env, net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 use tower_http::{
     services::ServeDir,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -66,9 +66,14 @@ async fn main() {
         .await
         .unwrap();
 
-    if let Err(e) = update_riot_data(&pool).await {
-        error!("error while update riot data: {e}");
-    }
+    tokio::spawn(async move {
+        loop {
+            if let Err(e) = update_riot_data(&pool).await {
+                error!("error while update riot data: {e}");
+            }
+            tokio::time::sleep(Duration::from_secs(60 * 60)).await
+        }
+    });
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
