@@ -8,11 +8,13 @@ services:
     shm_size: 128mb
     volumes:
       - ./postgres:/docker-entrypoint-initdb.d:r
-  
+
   app:
     image: rust:1-bookworm
     volumes:
       - .:/draft_together
     environment:
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - 3636:3000
     command: sh -c "cd draft_together && cargo run -p draft_together_server"
