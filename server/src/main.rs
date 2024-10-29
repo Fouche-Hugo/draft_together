@@ -10,9 +10,9 @@ use axum::{
 use axum_extra::TypedHeader;
 use database::ChampionDatabaseInsertion;
 use draft_together_data::{ChampionUpdate, Draft};
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio::sync::Mutex;
-use tracing::{error, info};
+use tracing::{debug, error, info, trace};
 
 use std::{env, net::SocketAddr, path::PathBuf, sync::Arc};
 use tower_http::{
@@ -24,6 +24,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use axum::extract::connect_info::ConnectInfo;
 
+use anyhow::Result;
 use futures::{sink::SinkExt, stream::StreamExt};
 
 mod database;
@@ -56,25 +57,6 @@ async fn main() {
         )
         .with_state(AppState::default());
 
-    let latest_version = league_data::get_latest_ddragon_version().await;
-    info!("latest league of legends version: {latest_version:?}");
-    let latest_version = latest_version.unwrap();
-    let download_path = league_data::get_ddragon_path_or_download(&latest_version).await;
-    info!("download result: {download_path:?}");
-
-    let decompressed_path = PathBuf::from(format!("dragontail-{latest_version}"));
-    if !decompressed_path.exists() {
-        info!("decompressing tarball: {download_path:?}");
-        let dragon_dir =
-            league_data::decompress_tarball(download_path.unwrap(), &decompressed_path);
-        info!("decompression finished: {dragon_dir:?}");
-    }
-    let extracted_path = format!("dragontail-extracted-{latest_version}");
-    let extract_data_result =
-        league_data::extract_data_from_ddragon(decompressed_path, &extracted_path, &latest_version);
-    info!(?extract_data_result);
-    let champions_data_dragon = extract_data_result.unwrap();
-
     let database_password = env::var("DATABASE_PASSWORD").unwrap_or("default_password".to_string());
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -84,32 +66,8 @@ async fn main() {
         .await
         .unwrap();
 
-    for champion in champions_data_dragon {
-        let champion_exists_result = database::champion_exists(&pool, &champion.riot_id).await;
-
-        match champion_exists_result {
-            Ok(exists) => {
-                if exists {
-                    let champion_database = ChampionDatabaseInsertion {
-                        riot_id: champion.riot_id,
-                        name: champion.name,
-                        default_skin_image_path: champion.default_skin_image_path,
-                        centered_default_skin_image_path: champion.centered_default_skin_image_path,
-                    };
-                    let insert_result = database::insert_champion(&pool, &champion_database).await;
-                    info!(
-                        "{} inserted into database: {insert_result:?}",
-                        champion_database.name
-                    );
-                } else {
-                    info!(
-                        "champion {} already exists in database, skipping insertion",
-                        champion.name
-                    );
-                }
-            }
-            Err(e) => error!("error while checking if {} exists: {e}", champion.name),
-        }
+    if let Err(e) = update_riot_data(&pool).await {
+        error!("error while update riot data: {e}");
     }
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
@@ -180,4 +138,52 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, app_state: AppState) 
     }
 
     println!("Websocket context {who} destroyed");
+}
+
+async fn update_riot_data(pool: &PgPool) -> Result<()> {
+    let latest_version = league_data::get_latest_ddragon_version().await?;
+    debug!("latest league of legends version: {latest_version:?}");
+
+    let download_path = league_data::get_ddragon_path_or_download(&latest_version).await?;
+    debug!("download result: {download_path:?}");
+
+    let decompressed_path = PathBuf::from(format!("dragontail-{latest_version}"));
+    let extracted_path = PathBuf::from(format!("dragontail-extracted-{latest_version}"));
+    if !decompressed_path.exists() {
+        debug!("decompressing tarball: {download_path:?}");
+        let dragon_dir = league_data::decompress_tarball(download_path, &decompressed_path);
+        debug!("decompression finished: {dragon_dir:?}");
+    }
+    if !extracted_path.exists() {
+        let champions_data_dragon = league_data::extract_data_from_ddragon(
+            decompressed_path,
+            &extracted_path,
+            &latest_version,
+        )?;
+        trace!(?champions_data_dragon);
+
+        for champion in champions_data_dragon {
+            let champion_exists = database::champion_exists(pool, &champion.riot_id).await?;
+
+            if champion_exists {
+                let champion_database = ChampionDatabaseInsertion {
+                    riot_id: champion.riot_id,
+                    name: champion.name,
+                    default_skin_image_path: champion.default_skin_image_path,
+                    centered_default_skin_image_path: champion.centered_default_skin_image_path,
+                };
+                database::insert_champion(pool, &champion_database).await?;
+                trace!("{} inserted into database", champion_database.name);
+            } else {
+                trace!(
+                    "champion {} already exists in database, skipping insertion",
+                    champion.name
+                );
+            }
+        }
+    }
+
+    info!("riot data successfully updated to version {latest_version}");
+
+    Ok(())
 }
