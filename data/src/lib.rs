@@ -2,7 +2,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Champion {
-    pub id: String,
+    pub id: ChampionId,
+    pub riot_id: String,
+    pub name: String,
+    pub default_skin_image_path: String,
+    pub centered_default_skin_image_path: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -29,7 +33,7 @@ pub enum ChampionPosition {
     RedBan5,
 }
 
-pub type ChampionId = i64;
+pub type ChampionId = i32;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChampionUpdate {

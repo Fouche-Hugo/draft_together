@@ -60,10 +60,22 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, app_state: AppState) 
                         };
                     debug!("deserialized champion: {champion_update:?} from {who}");
 
-                    let mut draft = draft.lock().await;
-                    draft.update(&champion_update);
-                    if let Err(e) = draft_tx.send(WsEvent::DraftUpdate) {
-                        error!("failed to send draft update to draft_tx channel: {e}");
+                    if app_state
+                        .valid_champion_ids
+                        .read()
+                        .await
+                        .contains(&champion_update.champion_id)
+                    {
+                        let mut draft = draft.write().await;
+                        draft.update(&champion_update);
+                        if let Err(e) = draft_tx.send(WsEvent::DraftUpdate) {
+                            error!("failed to send draft update to draft_tx channel: {e}");
+                        }
+                    } else {
+                        error!(
+                            "champion update was not valid: champion_id: {} was not valid",
+                            champion_update.champion_id
+                        );
                     }
                 }
                 _ => {}
@@ -74,7 +86,7 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, app_state: AppState) 
     let mut send_draft_update_tasks = tokio::spawn(async move {
         while let Ok(event) = draft_rx.recv().await {
             if let WsEvent::DraftUpdate = event {
-                let draft = app_state.draft.lock().await;
+                let draft = app_state.draft.read().await;
                 if let Err(e) = sender
                     .send(Message::Text(
                         serde_json::to_string(&*draft)

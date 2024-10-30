@@ -1,7 +1,7 @@
 CREATE TABLE champion (
     id SERIAL PRIMARY KEY,
-    riotId VARCHAR(255) NOT NULL UNIQUE,
+    riot_id VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL UNIQUE,
-    defaultSkinImagePath VARCHAR(255) NOT NULL UNIQUE,
-    centeredDefaultSkinImagePath VARCHAR(255) NOT NULL UNIQUE
+    default_skin_image_path VARCHAR(255) NOT NULL UNIQUE,
+    centered_default_skin_image_path VARCHAR(255) NOT NULL UNIQUE
 );
