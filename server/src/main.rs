@@ -42,6 +42,7 @@ impl IntoResponse for ApiError {
     }
 }
 
+// TODO: rooms https://users.rust-lang.org/t/axum-within-the-standard-chat-example-how-would-you-implement-multiple-chat-rooms/82519/2
 #[derive(Debug, Clone)]
 struct AppState {
     pool: Arc<PgPool>,
