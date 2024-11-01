@@ -1,4 +1,4 @@
-/target
+/back/target
 dragontail-**.tgz
 dragontail-**/
 .env

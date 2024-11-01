@@ -7,12 +7,12 @@ services:
       - POSTGRES_USER=draft_together
     shm_size: 128mb
     volumes:
-      - ./postgres:/docker-entrypoint-initdb.d:r
+      - ./back/postgres:/docker-entrypoint-initdb.d:r
 
   app:
     image: rust:1-bookworm
     volumes:
-      - .:/draft_together
+      - ./back:/draft_together
     environment:
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
     ports:
