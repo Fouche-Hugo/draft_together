@@ -6,6 +6,7 @@
     rustfmt
     rustc
     docker
+    nodejs_22
     (vscode-with-extensions.override {
       vscodeExtensions = with vscode-extensions; [
         bbenoist.nix
