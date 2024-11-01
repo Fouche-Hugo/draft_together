@@ -7,6 +7,7 @@
     rustc
     docker
     nodejs_22
+    pnpm
     (vscode-with-extensions.override {
       vscodeExtensions = with vscode-extensions; [
         bbenoist.nix
@@ -17,6 +18,7 @@
         vue.volar
         esbenp.prettier-vscode
         dbaeumer.vscode-eslint
+        bradlc.vscode-tailwindcss
         ms-azuretools.vscode-docker
       ];
     })

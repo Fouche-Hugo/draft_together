@@ -1,3 +1,11 @@
 {
-    "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix"
+  "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+  "eslint.workingDirectories": [
+    "./front"
+  ],
+  "npm.packageManager": "pnpm",
+  "eslint.experimental.useFlatConfig": true,
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
 }
