@@ -2,6 +2,8 @@ use draft_together_data::{Champion, Draft};
 use sqlx::{prelude::FromRow, query, query_as, PgPool};
 use uuid::Uuid;
 
+use crate::ServerDraft;
+
 #[derive(Debug, FromRow)]
 pub struct ChampionDatabase {
     pub id: i32,
@@ -27,59 +29,66 @@ impl From<ChampionDatabase> for Champion {
 pub struct DraftDatabase {
     pub id: i32,
     pub client_id: Uuid,
-    pub blue_ban_1: i32,
-    pub blue_ban_2: i32,
-    pub blue_ban_3: i32,
-    pub blue_ban_4: i32,
-    pub blue_ban_5: i32,
-    pub red_ban_1: i32,
-    pub red_ban_2: i32,
-    pub red_ban_3: i32,
-    pub red_ban_4: i32,
-    pub red_ban_5: i32,
-    pub blue_1: i32,
-    pub blue_2: i32,
-    pub blue_3: i32,
-    pub blue_4: i32,
-    pub blue_5: i32,
-    pub red_1: i32,
-    pub red_2: i32,
-    pub red_3: i32,
-    pub red_4: i32,
-    pub red_5: i32,
+    pub blue_ban_1: Option<i32>,
+    pub blue_ban_2: Option<i32>,
+    pub blue_ban_3: Option<i32>,
+    pub blue_ban_4: Option<i32>,
+    pub blue_ban_5: Option<i32>,
+    pub red_ban_1: Option<i32>,
+    pub red_ban_2: Option<i32>,
+    pub red_ban_3: Option<i32>,
+    pub red_ban_4: Option<i32>,
+    pub red_ban_5: Option<i32>,
+    pub blue_1: Option<i32>,
+    pub blue_2: Option<i32>,
+    pub blue_3: Option<i32>,
+    pub blue_4: Option<i32>,
+    pub blue_5: Option<i32>,
+    pub red_1: Option<i32>,
+    pub red_2: Option<i32>,
+    pub red_3: Option<i32>,
+    pub red_4: Option<i32>,
+    pub red_5: Option<i32>,
 }
 
-impl From<DraftDatabase> for Draft {
+// impl DraftDatabase {
+//     pub fn from_draft(draft: Draft, client_id: Uuid)
+// }
+
+impl From<DraftDatabase> for ServerDraft {
     fn from(value: DraftDatabase) -> Self {
         Self {
-            blue_champions: [
-                Some(value.blue_1),
-                Some(value.blue_2),
-                Some(value.blue_3),
-                Some(value.blue_4),
-                Some(value.blue_5),
-            ],
-            red_champions: [
-                Some(value.red_1),
-                Some(value.red_2),
-                Some(value.red_3),
-                Some(value.red_4),
-                Some(value.red_5),
-            ],
-            blue_bans: [
-                Some(value.blue_ban_1),
-                Some(value.blue_ban_2),
-                Some(value.blue_ban_3),
-                Some(value.blue_ban_4),
-                Some(value.blue_ban_5),
-            ],
-            red_bans: [
-                Some(value.red_ban_1),
-                Some(value.red_ban_2),
-                Some(value.red_ban_3),
-                Some(value.red_ban_4),
-                Some(value.red_ban_5),
-            ],
+            id: value.id,
+            draft: Draft {
+                blue_champions: [
+                    value.blue_1,
+                    value.blue_2,
+                    value.blue_3,
+                    value.blue_4,
+                    value.blue_5,
+                ],
+                red_champions: [
+                    value.red_1,
+                    value.red_2,
+                    value.red_3,
+                    value.red_4,
+                    value.red_5,
+                ],
+                blue_bans: [
+                    value.blue_ban_1,
+                    value.blue_ban_2,
+                    value.blue_ban_3,
+                    value.blue_ban_4,
+                    value.blue_ban_5,
+                ],
+                red_bans: [
+                    value.red_ban_1,
+                    value.red_ban_2,
+                    value.red_ban_3,
+                    value.red_ban_4,
+                    value.red_ban_5,
+                ],
+            },
         }
     }
 }
@@ -133,13 +142,13 @@ pub async fn query_draft_by_client_id(
         .await
 }
 
-pub async fn new_draft(pool: &PgPool, client_id: Uuid) -> Result<(), sqlx::Error> {
-    query("INSERT INTO draft (client_id) VALUES ($1)")
+pub async fn new_draft(pool: &PgPool, client_id: Uuid) -> Result<i32, sqlx::Error> {
+    let row: (i32,) = query_as("INSERT INTO draft (client_id) VALUES ($1) RETURNING id")
         .bind(client_id)
-        .execute(pool)
+        .fetch_one(pool)
         .await?;
 
-    Ok(())
+    Ok(row.0)
 }
 
 pub async fn draft_exists(pool: &PgPool, client_id: Uuid) -> Result<bool, sqlx::Error> {
@@ -151,7 +160,8 @@ pub async fn draft_exists(pool: &PgPool, client_id: Uuid) -> Result<bool, sqlx::
     Ok(result.is_some())
 }
 
-pub async fn update_draft(pool: &PgPool, draft: &DraftDatabase) -> Result<(), sqlx::Error> {
+pub async fn update_draft(pool: &PgPool, server_draft: &ServerDraft) -> Result<(), sqlx::Error> {
+    let draft = &server_draft.draft;
     query(
         "UPDATE draft
         SET blue_ban_1 = $1,
@@ -176,26 +186,27 @@ pub async fn update_draft(pool: &PgPool, draft: &DraftDatabase) -> Result<(), sq
         red_5 = $20
         WHERE id = $21",
     )
-    .bind(draft.blue_ban_1)
-    .bind(draft.blue_ban_2)
-    .bind(draft.blue_ban_3)
-    .bind(draft.blue_ban_4)
-    .bind(draft.blue_ban_5)
-    .bind(draft.red_ban_1)
-    .bind(draft.red_ban_2)
-    .bind(draft.red_ban_3)
-    .bind(draft.red_ban_4)
-    .bind(draft.red_ban_5)
-    .bind(draft.blue_1)
-    .bind(draft.blue_2)
-    .bind(draft.blue_3)
-    .bind(draft.blue_4)
-    .bind(draft.blue_5)
-    .bind(draft.red_1)
-    .bind(draft.red_2)
-    .bind(draft.red_3)
-    .bind(draft.red_4)
-    .bind(draft.red_5)
+    .bind(draft.blue_bans[0])
+    .bind(draft.blue_bans[1])
+    .bind(draft.blue_bans[2])
+    .bind(draft.blue_bans[3])
+    .bind(draft.blue_bans[4])
+    .bind(draft.red_bans[0])
+    .bind(draft.red_bans[1])
+    .bind(draft.red_bans[2])
+    .bind(draft.red_bans[3])
+    .bind(draft.red_bans[4])
+    .bind(draft.blue_champions[0])
+    .bind(draft.blue_champions[1])
+    .bind(draft.blue_champions[2])
+    .bind(draft.blue_champions[3])
+    .bind(draft.blue_champions[4])
+    .bind(draft.red_champions[0])
+    .bind(draft.red_champions[1])
+    .bind(draft.red_champions[2])
+    .bind(draft.red_champions[3])
+    .bind(draft.red_champions[4])
+    .bind(server_draft.id)
     .execute(pool)
     .await?;
 

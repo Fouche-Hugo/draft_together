@@ -5,7 +5,10 @@ use axum::{
     routing::{any, get},
     Json, Router,
 };
-use dashmap::DashMap;
+use dashmap::{
+    mapref::one::{Ref, RefMut},
+    DashMap,
+};
 use database::ChampionDatabaseInsertion;
 use draft_together_data::{Champion, Draft};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -14,14 +17,7 @@ use tracing::{debug, error, info, trace};
 use uuid::Uuid;
 use ws::WsEvent;
 
-use std::{
-    collections::{HashMap, HashSet},
-    env,
-    net::SocketAddr,
-    path::PathBuf,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashSet, env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 use tower_http::{
     services::ServeDir,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -39,8 +35,6 @@ mod ws;
 enum ApiError {
     #[error("error while fetching database: {0}")]
     Database(#[from] sqlx::Error),
-    #[error("draft not found: {0}")]
-    NotFoundDraft(Uuid),
 }
 
 impl IntoResponse for ApiError {
@@ -48,7 +42,6 @@ impl IntoResponse for ApiError {
         error!("an error has occured while fetching api: {self}");
         match self {
             Self::Database(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-            Self::NotFoundDraft(_) => (StatusCode::BAD_REQUEST, self.to_string()).into_response(),
         }
     }
 }
@@ -57,10 +50,23 @@ impl IntoResponse for ApiError {
 #[derive(Debug, Clone)]
 struct AppState {
     pool: Arc<PgPool>,
-    drafts: Arc<DashMap<Uuid, Draft>>,
+    drafts: Arc<DashMap<Uuid, ServerDraft>>,
+    drafts_connected_clients: Arc<DashMap<Uuid, u32>>,
     valid_champion_ids: Arc<RwLock<HashSet<i32>>>,
     events_sender: Arc<broadcast::Sender<WsEvent>>,
     events_receiver: Arc<broadcast::Receiver<WsEvent>>,
+}
+
+#[derive(Debug)]
+struct ServerDraft {
+    id: i32,
+    draft: Draft,
+}
+
+impl ServerDraft {
+    pub fn new(id: i32, draft: Draft) -> Self {
+        Self { id, draft }
+    }
 }
 
 #[tokio::main]
@@ -93,6 +99,7 @@ async fn main() {
         events_receiver: Arc::new(draft_rx),
         events_sender: Arc::new(draft_tx),
         drafts: Arc::new(DashMap::new()),
+        drafts_connected_clients: Arc::new(DashMap::default()),
     };
 
     {
@@ -193,11 +200,10 @@ async fn get_draft(
     extract::Path(client_id): extract::Path<Uuid>,
     State(app_state): State<AppState>,
 ) -> Result<Json<Draft>, ApiError> {
-    app_state
-        .drafts
-        .get(&client_id)
-        .map(|draft| Json(draft.clone()))
-        .ok_or(ApiError::NotFoundDraft(client_id))
+    get_current_draft(&app_state, client_id)
+        .await
+        .map(|server_draft| Json(server_draft.draft.clone()))
+        .map_err(|e| e.into())
 }
 
 async fn get_champions(State(app_state): State<AppState>) -> Result<Json<Vec<Champion>>, ApiError> {
@@ -208,4 +214,62 @@ async fn get_champions(State(app_state): State<AppState>) -> Result<Json<Vec<Cha
         .collect();
 
     Ok(Json(champions))
+}
+
+async fn get_current_draft(
+    app_state: &AppState,
+    draft_id: Uuid,
+) -> Result<Ref<'_, Uuid, ServerDraft>, sqlx::Error> {
+    let draft = app_state.drafts.get(&draft_id);
+
+    if let Some(draft) = draft {
+        Ok(draft)
+    } else if database::draft_exists(&app_state.pool, draft_id).await? {
+        let draft = database::query_draft_by_client_id(&app_state.pool, draft_id)
+            .await?
+            .into();
+        app_state.drafts.insert(draft_id, draft);
+        Ok(app_state
+            .drafts
+            .get(&draft_id)
+            .expect("draft should be in the dashmap, as it was just inserted"))
+    } else {
+        let id = database::new_draft(&app_state.pool, draft_id).await?;
+        let draft = Draft::default();
+        let server_draft = ServerDraft::new(id, draft);
+        app_state.drafts.insert(draft_id, server_draft);
+        Ok(app_state
+            .drafts
+            .get(&draft_id)
+            .expect("draft should be in the dashmap, as it was just inserted"))
+    }
+}
+
+async fn get_current_draft_mut(
+    app_state: &AppState,
+    draft_id: Uuid,
+) -> Result<RefMut<'_, Uuid, ServerDraft>, sqlx::Error> {
+    let draft = app_state.drafts.get_mut(&draft_id);
+
+    if let Some(draft) = draft {
+        Ok(draft)
+    } else if database::draft_exists(&app_state.pool, draft_id).await? {
+        let draft = database::query_draft_by_client_id(&app_state.pool, draft_id)
+            .await?
+            .into();
+        app_state.drafts.insert(draft_id, draft);
+        Ok(app_state
+            .drafts
+            .get_mut(&draft_id)
+            .expect("draft should be in the dashmap, as it was just inserted"))
+    } else {
+        let id = database::new_draft(&app_state.pool, draft_id).await?;
+        let draft = Draft::default();
+        let server_draft = ServerDraft::new(id, draft);
+        app_state.drafts.insert(draft_id, server_draft);
+        Ok(app_state
+            .drafts
+            .get_mut(&draft_id)
+            .expect("draft should be in the dashmap, as it was just inserted"))
+    }
 }
