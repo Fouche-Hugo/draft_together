@@ -46,7 +46,6 @@ impl IntoResponse for ApiError {
     }
 }
 
-// TODO: rooms https://users.rust-lang.org/t/axum-within-the-standard-chat-example-how-would-you-implement-multiple-chat-rooms/82519/2
 #[derive(Debug, Clone)]
 struct AppState {
     pool: Arc<PgPool>,
@@ -54,7 +53,7 @@ struct AppState {
     drafts_connected_clients: Arc<DashMap<Uuid, u32>>,
     valid_champion_ids: Arc<RwLock<HashSet<i32>>>,
     events_sender: Arc<broadcast::Sender<WsEvent>>,
-    events_receiver: Arc<broadcast::Receiver<WsEvent>>,
+    _events_receiver: Arc<broadcast::Receiver<WsEvent>>,
 }
 
 #[derive(Debug)]
@@ -96,7 +95,7 @@ async fn main() {
     let app_state = AppState {
         pool: Arc::new(pool),
         valid_champion_ids: Arc::new(RwLock::new(valid_champion_ids)),
-        events_receiver: Arc::new(draft_rx),
+        _events_receiver: Arc::new(draft_rx),
         events_sender: Arc::new(draft_tx),
         drafts: Arc::new(DashMap::new()),
         drafts_connected_clients: Arc::new(DashMap::default()),

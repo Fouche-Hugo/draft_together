@@ -12,7 +12,7 @@ use draft_together_data::ChampionUpdate;
 use futures::{stream::SplitSink, SinkExt, StreamExt};
 use std::net::SocketAddr;
 use tokio::sync::broadcast::Sender;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, trace};
 use uuid::Uuid;
 
 use crate::{database, get_current_draft, get_current_draft_mut, AppState};
@@ -134,8 +134,10 @@ async fn receive_draft_update(
         .await
         .contains(&champion_update.champion_id)
     {
-        let mut server_draft = get_current_draft_mut(app_state, draft_id).await?;
-        server_draft.draft.update(&champion_update);
+        {
+            let mut server_draft = get_current_draft_mut(app_state, draft_id).await?;
+            server_draft.draft.update(&champion_update);
+        }
         draft_tx.send(WsEvent::DraftUpdate)?;
         debug!("{who} updated draft {draft_id} with {champion_update:?}");
     } else {
@@ -174,10 +176,13 @@ async fn update_database_if_last_client(
         let server_draft = app_state.drafts.get(&draft_id);
         if let Some(server_draft) = server_draft {
             database::update_draft(&app_state.pool, &server_draft).await?;
+            // drop to not deadlock on remove
+            drop(server_draft);
 
             info!("draft with id {draft_id} was successfully updated in database");
             app_state.drafts_connected_clients.remove(&draft_id);
             app_state.drafts.remove(&draft_id);
+            trace!("draft with id {draft_id} was sucessfully removed from drafts");
 
             debug!("no clients connected for draft with id {draft_id}, draft was removed from hashmaps");
         } else {
