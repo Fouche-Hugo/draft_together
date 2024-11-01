@@ -1,18 +1,27 @@
 use axum::{
-    extract::State,
+    extract::{self, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{any, get},
     Json, Router,
 };
+use dashmap::DashMap;
 use database::ChampionDatabaseInsertion;
 use draft_together_data::{Champion, Draft};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio::sync::{broadcast, RwLock};
 use tracing::{debug, error, info, trace};
+use uuid::Uuid;
 use ws::WsEvent;
 
-use std::{collections::HashSet, env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    env,
+    net::SocketAddr,
+    path::PathBuf,
+    sync::Arc,
+    time::Duration,
+};
 use tower_http::{
     services::ServeDir,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -30,15 +39,17 @@ mod ws;
 enum ApiError {
     #[error("error while fetching database: {0}")]
     Database(#[from] sqlx::Error),
+    #[error("draft not found: {0}")]
+    NotFoundDraft(Uuid),
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         error!("an error has occured while fetching api: {self}");
         match self {
-            Self::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Database(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            Self::NotFoundDraft(_) => (StatusCode::BAD_REQUEST, self.to_string()).into_response(),
         }
-        .into_response()
     }
 }
 
@@ -46,7 +57,7 @@ impl IntoResponse for ApiError {
 #[derive(Debug, Clone)]
 struct AppState {
     pool: Arc<PgPool>,
-    draft: Arc<RwLock<Draft>>,
+    drafts: Arc<DashMap<Uuid, Draft>>,
     valid_champion_ids: Arc<RwLock<HashSet<i32>>>,
     events_sender: Arc<broadcast::Sender<WsEvent>>,
     events_receiver: Arc<broadcast::Receiver<WsEvent>>,
@@ -81,7 +92,7 @@ async fn main() {
         valid_champion_ids: Arc::new(RwLock::new(valid_champion_ids)),
         events_receiver: Arc::new(draft_rx),
         events_sender: Arc::new(draft_tx),
-        draft: Arc::new(RwLock::new(Draft::default())),
+        drafts: Arc::new(DashMap::new()),
     };
 
     {
@@ -99,8 +110,8 @@ async fn main() {
     let assets_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets");
     let app = Router::new()
         .fallback_service(ServeDir::new(assets_dir).append_index_html_on_directories(true))
-        .route("/ws", any(ws::ws_handler))
-        .route("/draft", get(get_draft))
+        .route("/ws/:draft_client_id", any(ws::ws_handler))
+        .route("/draft/:client_id", get(get_draft))
         .route("/champions", get(get_champions))
         .layer(
             TraceLayer::new_for_http()
@@ -178,10 +189,15 @@ async fn update_riot_data(app_state: &AppState) -> Result<()> {
     Ok(())
 }
 
-async fn get_draft(State(app_state): State<AppState>) -> Json<Draft> {
-    let draft = app_state.draft.read().await;
-
-    Json(draft.clone())
+async fn get_draft(
+    extract::Path(client_id): extract::Path<Uuid>,
+    State(app_state): State<AppState>,
+) -> Result<Json<Draft>, ApiError> {
+    app_state
+        .drafts
+        .get(&client_id)
+        .map(|draft| Json(draft.clone()))
+        .ok_or(ApiError::NotFoundDraft(client_id))
 }
 
 async fn get_champions(State(app_state): State<AppState>) -> Result<Json<Vec<Champion>>, ApiError> {

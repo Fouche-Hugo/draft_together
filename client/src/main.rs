@@ -6,7 +6,7 @@ use tokio::task::spawn_blocking;
 
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
-const SERVER: &str = "ws://127.0.0.1:3636/ws";
+const SERVER: &str = "ws://127.0.0.1:3636/ws/3106514f-7d73-497c-b481-d3cfbd2d5780";
 
 #[tokio::main]
 async fn main() {

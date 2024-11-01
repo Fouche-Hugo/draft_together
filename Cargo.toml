@@ -5,6 +5,7 @@ members = ["client", "data", "server"]
 anyhow = "1.0.91"
 axum = "0.7.7"
 axum-extra = "0.9.4"
+dashmap = "6.1.0"
 flate2 = "1.0.34"
 futures = "0.3.31"
 futures-util = "0.3.31"
@@ -21,3 +22,4 @@ tar = { version = "0.4.42", default-features = false }
 thiserror = "1.0.65"
 tokio-tungstenite = "0.24.0"
 tower-http = "0.6.1"
+uuid = "1.11.0"

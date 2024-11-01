@@ -7,6 +7,7 @@ edition = "2021"
 anyhow = { workspace = true }
 axum = { workspace = true, features = ["ws"] }
 axum-extra = { workspace = true, features = ["typed-header"] }
+dashmap = { workspace = true }
 flate2 = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
@@ -26,4 +27,5 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 draft_together_data = { path = "../data" }
 thiserror = { workspace = true }
-sqlx = { workspace = true, features = ["postgres", "runtime-tokio"] }
+sqlx = { workspace = true, features = ["postgres", "runtime-tokio", "uuid"] }
+uuid = { workspace = true, features = ["serde"] }

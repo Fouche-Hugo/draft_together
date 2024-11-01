@@ -28,5 +28,5 @@ CREATE TABLE draft (
     red_2 INTEGER REFERENCES champion(id),
     red_3 INTEGER REFERENCES champion(id),
     red_4 INTEGER REFERENCES champion(id),
-    red_5 INTEGER REFERENCES champion(id),
+    red_5 INTEGER REFERENCES champion(id)
 );
