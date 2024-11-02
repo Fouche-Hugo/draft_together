@@ -21,10 +21,18 @@ pub async fn get_latest_ddragon_version() -> Result<Version> {
     Ok(Version::parse(last_version)?)
 }
 
+pub const DATA_DRAGON_DIR: &str = "dragontail";
+
 pub async fn get_ddragon_path_or_download(version: &Version) -> Result<PathBuf> {
     info!("start to download ddragon");
 
-    let file_path = PathBuf::from(format!("dragontail-{version}.tgz"));
+    let data_dragon_dir = Path::new(DATA_DRAGON_DIR);
+    if !data_dragon_dir.exists() {
+        debug!("data dragon dir: {DATA_DRAGON_DIR} not found, creating it");
+        std::fs::create_dir(data_dragon_dir)?;
+    }
+
+    let file_path = PathBuf::from(format!("{DATA_DRAGON_DIR}/dragontail-{version}.tgz"));
     if !file_path.exists() {
         let url = format!("https://ddragon.leagueoflegends.com/cdn/dragontail-{version}.tgz");
         let response = reqwest::get(url).await?;
@@ -49,48 +57,60 @@ pub fn decompress_tarball(
     Ok(())
 }
 
+const CHAMPION_FULL_FILENAME: &str = "championFull.json";
+const DATA_DRAGON_CHAMPION_FULL_PATH: &str = "/data/en_US/championFull.json";
+const DATA_DRAGON_IMAGE_PATH: &str = "img/champion";
+const DATA_DRAGON_CENTERED_IMAGE_PATH: &str = "img/champion/centered";
+const SUB_DIRECTORY_IMAGE_PATH: &str = "img";
+
 pub fn extract_data_from_ddragon(
     ddragon_path: impl AsRef<Path>,
     output_path: impl AsRef<Path>,
     version: &Version,
 ) -> Result<Vec<ChampionDataDragon>> {
     let ddragon_path = ddragon_path.as_ref();
-    let champions_json_path = ddragon_path.join(format!("{version}/data/en_US/championFull.json"));
+    let champions_json_path =
+        ddragon_path.join(format!("{version}{DATA_DRAGON_CHAMPION_FULL_PATH}"));
     info!(?champions_json_path);
 
     let output_path = output_path.as_ref();
     if !output_path.exists() {
         std::fs::create_dir_all(output_path)?;
     }
-    let image_output_path = output_path.join("img");
+    let image_output_path = output_path.join(SUB_DIRECTORY_IMAGE_PATH);
     if !image_output_path.exists() {
         std::fs::create_dir_all(&image_output_path)?;
     }
 
-    let output_path_champion_json = output_path.join("championFull.json");
+    let output_path_champion_json = output_path.join(CHAMPION_FULL_FILENAME);
     std::fs::copy(champions_json_path, &output_path_champion_json)?;
-    let champions_riot = parse_champion_json(output_path_champion_json)?;
+    let mut champions_riot = parse_champion_json(output_path_champion_json)?;
 
-    for champion in &champions_riot {
+    for champion in &mut champions_riot {
         let champion_centered_path = ddragon_path
-            .join("img/champion/centered")
+            .join(DATA_DRAGON_CENTERED_IMAGE_PATH)
             .join(&champion.centered_default_skin_image_path);
+        let output_centered_path =
+            image_output_path.join(&champion.centered_default_skin_image_path);
 
         if champion.riot_id == "Fiddlesticks" {
             correct_fiddlesticks_image_name(&champion_centered_path)?;
         }
 
-        std::fs::copy(
-            &champion_centered_path,
-            image_output_path.join(&champion.centered_default_skin_image_path),
-        )?;
+        let output_default_image_path = image_output_path.join(&champion.default_skin_image_path);
+
+        std::fs::copy(&champion_centered_path, &output_centered_path)?;
         std::fs::copy(
             ddragon_path
                 .join(version.to_string())
-                .join("img/champion")
+                .join(DATA_DRAGON_IMAGE_PATH)
                 .join(&champion.default_skin_image_path),
-            image_output_path.join(&champion.default_skin_image_path),
+            &output_default_image_path,
         )?;
+
+        champion.default_skin_image_path = output_default_image_path.to_string_lossy().to_string();
+        champion.centered_default_skin_image_path =
+            output_centered_path.to_string_lossy().to_string();
     }
 
     Ok(champions_riot)

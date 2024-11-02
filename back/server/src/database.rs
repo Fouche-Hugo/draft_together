@@ -123,6 +123,20 @@ pub async fn insert_champion(
     Ok(())
 }
 
+pub async fn update_champion(
+    pool: &PgPool,
+    champion: &ChampionDatabaseInsertion,
+) -> Result<(), sqlx::Error> {
+    query("UPDATE champion SET name = $1, default_skin_image_path = $2, centered_default_skin_image_path = $3 WHERE riot_id = $4")
+        .bind(&champion.name)
+        .bind(&champion.default_skin_image_path)
+        .bind(&champion.centered_default_skin_image_path)
+        .bind(&champion.riot_id)
+        .execute(pool).await?;
+
+    Ok(())
+}
+
 pub async fn champion_exists(pool: &PgPool, riot_id: &str) -> Result<bool, sqlx::Error> {
     let result = query("SELECT riot_id FROM champion WHERE riot_id = $1")
         .bind(riot_id)

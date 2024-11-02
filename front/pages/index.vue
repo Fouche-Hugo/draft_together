@@ -1,3 +1,11 @@
+<script setup lang="ts">
+import { v4 } from "uuid";
+
+function new_draft_link(): string {
+  return "/" + v4();
+}
+</script>
+
 <template>
-    <h1>Hello</h1>
+  <NuxtLink :to="new_draft_link()">New draft</NuxtLink>
 </template>

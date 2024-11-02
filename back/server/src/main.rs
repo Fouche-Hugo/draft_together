@@ -11,6 +11,7 @@ use dashmap::{
 };
 use database::ChampionDatabaseInsertion;
 use draft_together_data::{Champion, Draft};
+use league_data::DATA_DRAGON_DIR;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio::sync::{broadcast, RwLock};
 use tracing::{debug, error, info, trace};
@@ -143,8 +144,10 @@ async fn update_riot_data(app_state: &AppState) -> Result<()> {
     let download_path = league_data::get_ddragon_path_or_download(&latest_version).await?;
     debug!("download result: {download_path:?}");
 
-    let decompressed_path = PathBuf::from(format!("dragontail-{latest_version}"));
-    let extracted_path = PathBuf::from(format!("dragontail-extracted-{latest_version}"));
+    let decompressed_path = PathBuf::from(format!("{DATA_DRAGON_DIR}/dragontail-{latest_version}"));
+    let extracted_path = PathBuf::from(format!(
+        "{DATA_DRAGON_DIR}/dragontail-extracted-{latest_version}"
+    ));
     if !decompressed_path.exists() {
         debug!("decompressing tarball: {download_path:?}");
         let dragon_dir = league_data::decompress_tarball(download_path, &decompressed_path);
@@ -161,20 +164,21 @@ async fn update_riot_data(app_state: &AppState) -> Result<()> {
         for champion in champions_data_dragon {
             let champion_exists = database::champion_exists(pool, &champion.riot_id).await?;
 
+            let champion_database = ChampionDatabaseInsertion {
+                riot_id: champion.riot_id,
+                name: champion.name,
+                default_skin_image_path: champion.default_skin_image_path,
+                centered_default_skin_image_path: champion.centered_default_skin_image_path,
+            };
             if !champion_exists {
-                let champion_database = ChampionDatabaseInsertion {
-                    riot_id: champion.riot_id,
-                    name: champion.name,
-                    default_skin_image_path: champion.default_skin_image_path,
-                    centered_default_skin_image_path: champion.centered_default_skin_image_path,
-                };
                 database::insert_champion(pool, &champion_database).await?;
                 trace!("{} inserted into database", champion_database.name);
             } else {
                 trace!(
-                    "champion {} already exists in database, skipping insertion",
-                    champion.name
+                    "champion {} already exists in database, updating his data",
+                    champion_database.name
                 );
+                database::update_champion(pool, &champion_database).await?;
             }
         }
 

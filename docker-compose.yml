@@ -18,3 +18,12 @@ services:
     ports:
       - 3636:3000
     command: sh -c "cd draft_together && cargo run -p draft_together_server"
+
+  front:
+    image: guergeiro/pnpm:22-8
+    volumes:
+      - ./front:/draft_together
+      - ./back/dragontail:/draft_together/public/dragontail
+    ports:
+      - 80:3000
+    command: sh -c "cd draft_together && pnpm run dev"
