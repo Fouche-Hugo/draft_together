@@ -24,8 +24,6 @@ pub async fn get_latest_ddragon_version() -> Result<Version> {
 pub const DATA_DRAGON_DIR: &str = "dragontail";
 
 pub async fn get_ddragon_path_or_download(version: &Version) -> Result<PathBuf> {
-    info!("start to download ddragon");
-
     let data_dragon_dir = Path::new(DATA_DRAGON_DIR);
     if !data_dragon_dir.exists() {
         debug!("data dragon dir: {DATA_DRAGON_DIR} not found, creating it");
@@ -34,11 +32,16 @@ pub async fn get_ddragon_path_or_download(version: &Version) -> Result<PathBuf> 
 
     let file_path = PathBuf::from(format!("{DATA_DRAGON_DIR}/dragontail-{version}.tgz"));
     if !file_path.exists() {
+        debug!("starting to download ddragon");
+
         let url = format!("https://ddragon.leagueoflegends.com/cdn/dragontail-{version}.tgz");
         let response = reqwest::get(url).await?;
         let mut content = Cursor::new(response.bytes().await?);
         let mut file = std::fs::File::create(&file_path)?;
         std::io::copy(&mut content, &mut file)?;
+        info!("data dragon downloaded to: {file_path:?}");
+    } else {
+        debug!("data dragon already exists at path: {file_path:?}");
     }
 
     Ok(file_path)

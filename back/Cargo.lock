@@ -402,6 +402,7 @@ dependencies = [
  "headers",
  "reqwest",
  "semver",
+ "serde",
  "serde_json",
  "sqlx",
  "tar",

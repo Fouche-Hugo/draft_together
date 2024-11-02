@@ -7,6 +7,16 @@ pub struct Champion {
     pub name: String,
     pub default_skin_image_path: String,
     pub centered_default_skin_image_path: String,
+    pub positions: Vec<ChampionRole>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+pub enum ChampionRole {
+    TOP,
+    JUNGLE,
+    MID,
+    BOT,
+    SUPPORT,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]

@@ -14,7 +14,7 @@ use draft_together_data::{Champion, Draft};
 use league_data::DATA_DRAGON_DIR;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio::sync::{broadcast, RwLock};
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, info, trace, warn};
 use uuid::Uuid;
 use ws::WsEvent;
 
@@ -28,6 +28,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use anyhow::Result;
 
+mod community_data;
 mod database;
 mod league_data;
 mod ws;
@@ -114,6 +115,19 @@ async fn main() {
         });
     }
 
+    {
+        let app_state = app_state.clone();
+        tokio::spawn(async move {
+            // tokio::times::sleep(Duration::from_secs(secs))
+            loop {
+                if let Err(e) = update_champions_roles(&app_state).await {
+                    error!("error while update champions roles: {e}");
+                }
+                tokio::time::sleep(Duration::from_secs(60 * 60 * 24)).await
+            }
+        });
+    }
+
     let assets_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets");
     let app = Router::new()
         .fallback_service(ServeDir::new(assets_dir).append_index_html_on_directories(true))
@@ -142,17 +156,19 @@ async fn update_riot_data(app_state: &AppState) -> Result<()> {
     debug!("latest league of legends version: {latest_version:?}");
 
     let download_path = league_data::get_ddragon_path_or_download(&latest_version).await?;
-    debug!("download result: {download_path:?}");
 
     let decompressed_path = PathBuf::from(format!("{DATA_DRAGON_DIR}/dragontail-{latest_version}"));
-    let extracted_path = PathBuf::from(format!(
-        "{DATA_DRAGON_DIR}/dragontail-extracted-{latest_version}"
-    ));
     if !decompressed_path.exists() {
         debug!("decompressing tarball: {download_path:?}");
         let dragon_dir = league_data::decompress_tarball(download_path, &decompressed_path);
-        debug!("decompression finished: {dragon_dir:?}");
+        info!("data dragon decompression finished: {dragon_dir:?}");
+    } else {
+        debug!("data dragon was already decompressed, folder {decompressed_path:?} already exists");
     }
+
+    let extracted_path = PathBuf::from(format!(
+        "{DATA_DRAGON_DIR}/dragontail-extracted-{latest_version}"
+    ));
     if !extracted_path.exists() {
         let champions_data_dragon = league_data::extract_data_from_ddragon(
             decompressed_path,
@@ -189,12 +205,68 @@ async fn update_riot_data(app_state: &AppState) -> Result<()> {
                     .iter()
                     .map(|champion| champion.id)
                     .collect();
+                info!("riot data successfully updated to version {latest_version}");
+                debug!("starting update positions job");
+                if let Err(e) = update_champions_roles(app_state).await {
+                    error!("error while updating champions roles: {e}");
+                } else {
+                    info!("champions roles successfully updated");
+                }
             }
             Err(e) => error!("failed to get champion updated after data update: {e}"),
         }
+    } else {
+        debug!("data dragon for version {latest_version} was already extracted at path: {extracted_path:?}");
     }
 
-    info!("riot data successfully updated to version {latest_version}");
+    Ok(())
+}
+
+async fn update_champions_roles(app_state: &AppState) -> Result<()> {
+    let mut champions_rates = community_data::get_champions_rates().await?;
+    let community_champions = community_data::get_community_champion_ids().await?;
+
+    let champions_with_rates: Vec<(
+        community_data::CommunityChampion,
+        Option<community_data::ChampionRates>,
+    )> = community_champions
+        .into_iter()
+        .map(|community_champion| {
+            let rates = champions_rates.data.remove(&community_champion.id);
+            (community_champion, rates)
+        })
+        .collect();
+
+    let pool = &app_state.pool;
+    for (champion, rates) in champions_with_rates {
+        if let Some(rates) = rates {
+            if database::champion_exists(pool, &champion.name).await? {
+                let rates = sqlx::types::Json(rates.into());
+                database::update_champion_roles(pool, &champion.name, &rates).await?;
+                debug!(
+                    "champion {} roles sucessfully updated with roles: {:?}",
+                    champion.name, rates
+                );
+            } else if database::champion_exists(pool, &champion.alias).await? {
+                let rates = sqlx::types::Json(rates.into());
+                database::update_champion_roles(pool, &champion.alias, &rates).await?;
+                debug!(
+                    "champion {} roles sucessfully updated with roles: {:?}",
+                    champion.alias, rates
+                );
+            } else {
+                warn!(
+                    "failed to find a champion with name: {} or alias: {}",
+                    champion.name, champion.alias
+                );
+            }
+        } else {
+            warn!(
+                "No champion position rates found for champion {}",
+                champion.name
+            );
+        }
+    }
 
     Ok(())
 }

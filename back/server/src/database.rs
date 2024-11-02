@@ -1,5 +1,5 @@
-use draft_together_data::{Champion, Draft};
-use sqlx::{prelude::FromRow, query, query_as, PgPool};
+use draft_together_data::{Champion, ChampionRole, Draft};
+use sqlx::{prelude::FromRow, query, query_as, types::Json, PgPool};
 use uuid::Uuid;
 
 use crate::ServerDraft;
@@ -11,6 +11,7 @@ pub struct ChampionDatabase {
     pub name: String,
     pub default_skin_image_path: String,
     pub centered_default_skin_image_path: String,
+    pub positions: Json<Vec<ChampionRole>>,
 }
 
 impl From<ChampionDatabase> for Champion {
@@ -21,6 +22,7 @@ impl From<ChampionDatabase> for Champion {
             name: value.name,
             default_skin_image_path: value.default_skin_image_path,
             centered_default_skin_image_path: value.centered_default_skin_image_path,
+            positions: value.positions.0,
         }
     }
 }
@@ -50,10 +52,6 @@ pub struct DraftDatabase {
     pub red_4: Option<i32>,
     pub red_5: Option<i32>,
 }
-
-// impl DraftDatabase {
-//     pub fn from_draft(draft: Draft, client_id: Uuid)
-// }
 
 impl From<DraftDatabase> for ServerDraft {
     fn from(value: DraftDatabase) -> Self {
@@ -103,7 +101,7 @@ pub struct ChampionDatabaseInsertion {
 
 pub async fn query_champions(pool: &PgPool) -> Result<Vec<ChampionDatabase>, sqlx::Error> {
     query_as(
-        "SELECT id, riot_id, name, default_skin_image_path, centered_default_skin_image_path FROM champion",
+        "SELECT id, riot_id, name, default_skin_image_path, centered_default_skin_image_path, positions FROM champion",
     )
     .fetch_all(pool)
     .await
@@ -133,6 +131,20 @@ pub async fn update_champion(
         .bind(&champion.centered_default_skin_image_path)
         .bind(&champion.riot_id)
         .execute(pool).await?;
+
+    Ok(())
+}
+
+pub async fn update_champion_roles(
+    pool: &PgPool,
+    riot_id: &str,
+    new_roles: &sqlx::types::Json<Vec<ChampionRole>>,
+) -> Result<(), sqlx::Error> {
+    query("UPDATE champion SET positions = $1 WHERE riot_id = $2")
+        .bind(new_roles)
+        .bind(riot_id)
+        .execute(pool)
+        .await?;
 
     Ok(())
 }
