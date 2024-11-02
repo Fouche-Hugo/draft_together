@@ -1,8 +1,18 @@
-<!-- <script setup lang="ts"></script> -->
+<script setup lang="ts">
+import type { Champion } from "~/server/champion";
+import BansTeam from "./BansTeam.vue";
+
+interface Props {
+  blueBans: [Champion, Champion, Champion, Champion, Champion];
+  redBans: [Champion, Champion, Champion, Champion, Champion];
+}
+
+const props = defineProps<Props>();
+</script>
 
 <template>
-  <header class="flex justify-between">
-    <div class="h-32 w-9 bg-slate-300"></div>
-    <div class="h-32 w-9 bg-slate-300"></div>
+  <header class="flex min-h-[100px] items-stretch justify-between">
+    <BansTeam :champions="props.blueBans" />
+    <BansTeam :champions="props.redBans" />
   </header>
 </template>

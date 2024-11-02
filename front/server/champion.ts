@@ -4,4 +4,5 @@ export interface Champion {
   name: string;
   default_skin_image_path: string;
   centered_default_skin_image_path: string;
+  positions: string[]
 }
