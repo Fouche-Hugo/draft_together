@@ -6,7 +6,12 @@ const { isSelected } = defineProps({
 </script>
 
 <template>
-  <button :class="{ 'bg-blue-100': isSelected }" @click="$emit('click')">
+  <button
+    :class="{
+      'opacity-40': !isSelected,
+    }"
+    @click="$emit('click')"
+  >
     <slot />
   </button>
 </template>

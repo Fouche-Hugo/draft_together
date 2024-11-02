@@ -11,6 +11,7 @@ import PositionJungle from "~/components/icons/PositionJungle.vue";
 import PositionMid from "~/components/icons/PositionMid.vue";
 import PositionBottom from "~/components/icons/PositionBottom.vue";
 import PositionSupport from "~/components/icons/PositionSupport.vue";
+import SearchInput from "~/components/SearchInput.vue";
 
 const { data } = await useFetch<Champion[]>("http://app:3000/champions");
 const champions = data.value !== null ? data.value : [];
@@ -23,6 +24,7 @@ definePageMeta({
 });
 
 let roleSelected: string | null = null;
+const searchInput = ref("");
 
 const filtered_champions = ref(champions);
 function filter_champions(role: string) {
@@ -67,55 +69,61 @@ function unfilter_champions() {
           champions[4],
         ]"
       />
-      <div class="flex flex-col items-stretch gap-4 overflow-scroll px-4">
-        <div class="flex gap-4">
-          <ChampionRole
-            :is-selected="roleSelected === 'TOP'"
-            @click="
-              roleSelected === 'TOP'
-                ? unfilter_champions()
-                : filter_champions('TOP')
-            "
-            ><PositionTop
-          /></ChampionRole>
-          <ChampionRole
-            :is-selected="roleSelected === 'JUNGLE'"
-            @click="
-              roleSelected === 'JUNGLE'
-                ? unfilter_champions()
-                : filter_champions('JUNGLE')
-            "
-            ><PositionJungle
-          /></ChampionRole>
-          <ChampionRole
-            :is-selected="roleSelected === 'MID'"
-            @click="
-              roleSelected === 'MID'
-                ? unfilter_champions()
-                : filter_champions('MID')
-            "
-            ><PositionMid
-          /></ChampionRole>
-          <ChampionRole
-            :is-selected="roleSelected === 'BOT'"
-            @click="
-              roleSelected === 'BOT'
-                ? unfilter_champions()
-                : filter_champions('BOT')
-            "
-            ><PositionBottom
-          /></ChampionRole>
-          <ChampionRole
-            :is-selected="roleSelected === 'SUPPORT'"
-            @click="
-              roleSelected === 'SUPPORT'
-                ? unfilter_champions()
-                : filter_champions('SUPPORT')
-            "
-            ><PositionSupport
-          /></ChampionRole>
+      <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-scroll px-4">
+        <div class="flex justify-between gap-4">
+          <div class="flex gap-4">
+            <ChampionRole
+              :is-selected="roleSelected === 'TOP'"
+              @click="
+                roleSelected === 'TOP'
+                  ? unfilter_champions()
+                  : filter_champions('TOP')
+              "
+              ><PositionTop
+            /></ChampionRole>
+            <ChampionRole
+              :is-selected="roleSelected === 'JUNGLE'"
+              @click="
+                roleSelected === 'JUNGLE'
+                  ? unfilter_champions()
+                  : filter_champions('JUNGLE')
+              "
+              ><PositionJungle
+            /></ChampionRole>
+            <ChampionRole
+              :is-selected="roleSelected === 'MID'"
+              @click="
+                roleSelected === 'MID'
+                  ? unfilter_champions()
+                  : filter_champions('MID')
+              "
+              ><PositionMid
+            /></ChampionRole>
+            <ChampionRole
+              :is-selected="roleSelected === 'BOT'"
+              @click="
+                roleSelected === 'BOT'
+                  ? unfilter_champions()
+                  : filter_champions('BOT')
+              "
+              ><PositionBottom
+            /></ChampionRole>
+            <ChampionRole
+              :is-selected="roleSelected === 'SUPPORT'"
+              @click="
+                roleSelected === 'SUPPORT'
+                  ? unfilter_champions()
+                  : filter_champions('SUPPORT')
+              "
+              ><PositionSupport
+            /></ChampionRole>
+          </div>
+          <SearchInput v-model="searchInput" />
         </div>
-        <ChampionsSelector :champions="filtered_champions" />
+        <ChampionsSelector
+          :champions="filtered_champions"
+          :search-input="searchInput"
+        />
       </div>
       <ChampionsTeam
         :champions="[
