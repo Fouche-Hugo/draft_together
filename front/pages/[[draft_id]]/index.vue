@@ -2,8 +2,8 @@
 import ChampionsTeam from "~/components/ChampionsTeam.vue";
 import { validate } from "uuid";
 import ChampionsSelector from "~/components/ChampionsSelector.vue";
-import type { Draft } from "~/server/draft";
-import type { Champion } from "~/server/champion";
+import type { ChampionIdsList, Draft } from "~/server/draft";
+import type { Champion, ChampionsList } from "~/server/champion";
 import DraftHeader from "~/components/DraftHeader.vue";
 import DraftFooter from "~/components/DraftFooter.vue";
 import SearchInput from "~/components/SearchInput.vue";
@@ -35,6 +35,25 @@ const draft: Ref<Draft> =
         red_bans: [null, null, null, null, null],
       });
 
+if (import.meta.client) {
+  const webSocket = new WebSocket(
+    `ws://localhost:3636/ws/${route.params.draft_id}`,
+  );
+  webSocket.onmessage = (event: MessageEvent<string>) => {
+    draft.value = JSON.parse(event.data);
+  };
+  webSocket.onerror = (error) => console.log("ws error: ", error);
+}
+
+function mapChampions(indexes: ChampionIdsList): ChampionsList {
+  return indexes.map((id) => {
+    const championIndex = champions.find((champion) => {
+      return champion.id === id;
+    });
+    return championIndex !== undefined ? championIndex : null;
+  }) as ChampionsList;
+}
+
 const roleSelected: Ref<string | null> = ref(null);
 provide("roleSelected", roleSelected);
 const searchInput = ref("");
@@ -63,30 +82,12 @@ provide("selection", selection);
 <template>
   <div class="flex h-full flex-col items-stretch gap-4">
     <DraftHeader
-      :blue-bans="
-        draft.blue_bans.map((id) => {
-          return champions.find((champion) => {
-            return champion.id === id;
-          });
-        })
-      "
-      :red-bans="[
-        champions[0],
-        champions[1],
-        champions[2],
-        champions[3],
-        champions[4],
-      ]"
+      :blue-bans="mapChampions(draft.blue_bans)"
+      :red-bans="mapChampions(draft.red_bans)"
     />
     <main class="flex grow items-stretch overflow-scroll">
       <ChampionsTeam
-        :champions="[
-          champions[0],
-          champions[1],
-          champions[2],
-          champions[3],
-          champions[4],
-        ]"
+        :champions="mapChampions(draft.blue_champions)"
         :selected-index="selection?.[0] === 'BLUE' ? selection[1] : null"
         team="BLUE"
       />
@@ -101,13 +102,7 @@ provide("selection", selection);
         />
       </div>
       <ChampionsTeam
-        :champions="[
-          champions[0],
-          champions[1],
-          champions[2],
-          champions[3],
-          champions[4],
-        ]"
+        :champions="mapChampions(draft.red_champions)"
         :selected-index="selection?.[0] === 'RED' ? selection[1] : null"
         team="RED"
       />

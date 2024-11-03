@@ -10,7 +10,6 @@ const props = defineProps<Props>();
 let sorted_champions: Champion[] = [];
 
 watchEffect(() => {
-  console.log(props.searchInput);
   sorted_champions = props.champions
     .toSorted((a, b) => {
       if (a.name < b.name) {
@@ -24,7 +23,6 @@ watchEffect(() => {
         .toLowerCase()
         .includes(props.searchInput.toLowerCase());
     });
-  console.log(sorted_champions);
 });
 </script>
 
