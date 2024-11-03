@@ -7,6 +7,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+defineEmits(["click"]);
+
 let sorted_champions: Champion[] = [];
 
 watchEffect(() => {
@@ -28,7 +30,11 @@ watchEffect(() => {
 
 <template>
   <section class="grid grid-cols-8 gap-3 overflow-scroll border-zinc-600">
-    <div v-for="champion in sorted_champions" :key="champion.id">
+    <div
+      v-for="champion in sorted_champions"
+      :key="champion.id"
+      @click="$emit('click', champion.id)"
+    >
       <img :src="champion.default_skin_image_path" />
     </div>
   </section>

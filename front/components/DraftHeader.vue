@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ChampionsList } from "~/server/champion";
+import { Team } from "~/server/draft";
 import BansTeam from "./BansTeam.vue";
 
 interface Props {
@@ -12,7 +13,7 @@ const props = defineProps<Props>();
 
 <template>
   <header class="flex min-h-[100px] items-stretch justify-between">
-    <BansTeam :champions="props.blueBans" team="BLUE" />
-    <BansTeam :champions="props.redBans" team="RED" />
+    <BansTeam :champions="props.blueBans" :team="Team.Blue" />
+    <BansTeam :champions="props.redBans" :team="Team.Red" />
   </header>
 </template>

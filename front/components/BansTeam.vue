@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Champion } from "~/server/champion";
+import type { Selection, Team } from "~/server/draft";
 
 interface Props {
   champions: [
@@ -9,11 +10,27 @@ interface Props {
     Champion | null,
     Champion | null,
   ];
-  team: string;
+  team: Team;
 }
 
 const props = defineProps<Props>();
-const selection: Ref<[string, number] | null> = inject("selection")!;
+const selection: Ref<Selection | null> = inject("selection")!;
+
+function updateSelection(index: number) {
+  if (
+    selection.value?.team !== props.team ||
+    !selection.value.isBan ||
+    selection.value.index !== index
+  ) {
+    selection.value = {
+      team: props.team,
+      isBan: true,
+      index,
+    };
+  } else {
+    selection.value = null;
+  }
+}
 </script>
 
 <template>
@@ -23,37 +40,34 @@ const selection: Ref<[string, number] | null> = inject("selection")!;
         v-if="champion !== null"
         class="relative h-24 w-24 bg-cover"
         :style="`background-image: url(${champion.default_skin_image_path})`"
-        @click="
-          selection =
-            selection?.[0] !== `BAN${team}` || selection[1] !== index
-              ? [`BAN${team}`, index]
-              : null
-        "
+        @click="updateSelection(index)"
       >
         <div
           class="absolute inset-0 border-zinc-100"
           :class="{
-            border: selection?.[0] === `BAN${team}` && selection?.[1] === index,
+            border:
+              selection?.isBan &&
+              selection?.index === index &&
+              selection.team === props.team,
           }"
         ></div>
       </button>
       <button
         v-else
         class="relative h-24 w-24 bg-cover"
-        @click="
-          selection =
-            selection?.[0] !== `BAN${team}` || selection[1] !== index
-              ? [`BAN${team}`, index]
-              : null
-        "
+        @click="updateSelection(index)"
       >
         <div
           class="absolute inset-0 border"
           :class="{
             'border-zinc-100':
-              selection?.[0] === `BAN${team}` && selection?.[1] === index,
+              selection?.isBan &&
+              selection?.index === index &&
+              selection.team === props.team,
             'border-zinc-600':
-              selection?.[0] !== `BAN${team}` || selection[1] !== index,
+              !selection?.isBan ||
+              selection?.index !== index ||
+              selection.team !== props.team,
           }"
         ></div>
       </button>

@@ -1,15 +1,32 @@
 <script setup lang="ts">
 import type { Champion } from "~/server/champion";
+import type { Selection, Team } from "~/server/draft";
 
 interface Props {
   champion: Champion | null;
-  team: string;
+  team: Team;
   index: number;
 }
 
 const props = defineProps<Props>();
 
-const selection: Ref<[string, number] | null> = inject("selection")!;
+const selection: Ref<Selection | null> = inject("selection")!;
+
+function updateSelection() {
+  if (
+    selection.value?.team !== props.team ||
+    selection.value.isBan ||
+    selection.value.index !== props.index
+  ) {
+    selection.value = {
+      team: props.team,
+      isBan: false,
+      index: props.index,
+    };
+  } else {
+    selection.value = null;
+  }
+}
 </script>
 
 <template>
@@ -17,37 +34,30 @@ const selection: Ref<[string, number] | null> = inject("selection")!;
     v-if="props.champion !== null"
     class="relative bg-cover bg-top"
     :style="`background-image: url(${props.champion.centered_default_skin_image_path})`"
-    @click="
-      selection =
-        selection?.[0] !== `${team}` || selection[1] !== index
-          ? [`${team}`, index]
-          : null
-    "
+    @click="updateSelection"
   >
     <div
       class="absolute inset-0 border-zinc-100"
       :class="{
-        border: selection?.[0] === `${team}` && selection?.[1] === index,
+        border:
+          !selection?.isBan &&
+          selection?.index === index &&
+          selection.team === props.team,
       }"
     ></div>
   </button>
-  <button
-    v-else
-    class="relative bg-cover bg-top"
-    @click="
-      selection =
-        selection?.[0] !== `${team}` || selection[1] !== index
-          ? [`${team}`, index]
-          : null
-    "
-  >
+  <button v-else class="relative bg-cover bg-top" @click="updateSelection">
     <div
       class="absolute inset-0 border"
       :class="{
         'border-zinc-100':
-          selection?.[0] === `${team}` && selection?.[1] === index,
+          !selection?.isBan &&
+          selection?.index === index &&
+          selection.team === props.team,
         'border-zinc-600':
-          selection?.[0] !== `${team}` || selection?.[1] !== index,
+          selection?.isBan ||
+          selection?.index !== index ||
+          selection.team !== props.team,
       }"
     ></div>
   </button>

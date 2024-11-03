@@ -2,7 +2,13 @@
 import ChampionsTeam from "~/components/ChampionsTeam.vue";
 import { validate } from "uuid";
 import ChampionsSelector from "~/components/ChampionsSelector.vue";
-import type { ChampionIdsList, Draft } from "~/server/draft";
+import {
+  computePosition,
+  Team,
+  type ChampionIdsList,
+  type Draft,
+  type Selection,
+} from "~/server/draft";
 import type { Champion, ChampionsList } from "~/server/champion";
 import DraftHeader from "~/components/DraftHeader.vue";
 import DraftFooter from "~/components/DraftFooter.vue";
@@ -35,14 +41,28 @@ const draft: Ref<Draft> =
         red_bans: [null, null, null, null, null],
       });
 
+let webSocket: WebSocket;
 if (import.meta.client) {
-  const webSocket = new WebSocket(
-    `ws://localhost:3636/ws/${route.params.draft_id}`,
-  );
+  webSocket = new WebSocket(`ws://localhost:3636/ws/${route.params.draft_id}`);
   webSocket.onmessage = (event: MessageEvent<string>) => {
     draft.value = JSON.parse(event.data);
   };
   webSocket.onerror = (error) => console.log("ws error: ", error);
+}
+
+function sendDraftUpdate(championId: number) {
+  if (selection.value !== null) {
+    webSocket.send(
+      JSON.stringify({
+        champion_id: championId,
+        position: computePosition(
+          selection.value.team,
+          selection.value.index,
+          selection.value.isBan,
+        ),
+      }),
+    );
+  }
 }
 
 function mapChampions(indexes: ChampionIdsList): ChampionsList {
@@ -75,7 +95,7 @@ function unfilter_champions() {
   roleSelected.value = null;
 }
 
-const selection: Ref<[string, number] | null> = ref(null);
+const selection: Ref<Selection | null> = ref(null);
 provide("selection", selection);
 </script>
 
@@ -88,8 +108,7 @@ provide("selection", selection);
     <main class="flex grow items-stretch overflow-scroll">
       <ChampionsTeam
         :champions="mapChampions(draft.blue_champions)"
-        :selected-index="selection?.[0] === 'BLUE' ? selection[1] : null"
-        team="BLUE"
+        :team="Team.Blue"
       />
       <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-scroll px-4">
         <div class="flex justify-between gap-4">
@@ -99,12 +118,12 @@ provide("selection", selection);
         <ChampionsSelector
           :champions="filtered_champions"
           :search-input="searchInput"
+          @click="(id) => sendDraftUpdate(id)"
         />
       </div>
       <ChampionsTeam
         :champions="mapChampions(draft.red_champions)"
-        :selected-index="selection?.[0] === 'RED' ? selection[1] : null"
-        team="RED"
+        :team="Team.Red"
       />
     </main>
     <DraftFooter />

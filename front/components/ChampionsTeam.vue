@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { ChampionsList } from "~/server/champion";
 import ChampionTeam from "./ChampionTeam.vue";
+import type { Team } from "~/server/draft";
 
 interface Props {
   champions: ChampionsList;
-  team: string;
+  team: Team;
 }
 
 const props = defineProps<Props>();
