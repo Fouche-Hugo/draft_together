@@ -1,14 +1,19 @@
 <script setup lang="ts">
+interface Props {
+  role: string;
+}
+
+const props = defineProps<Props>();
+
 defineEmits(["click"]);
-const { isSelected } = defineProps({
-  isSelected: { type: Boolean, required: true },
-});
+
+const roleSelected: Ref<string | null> = inject("roleSelected")!;
 </script>
 
 <template>
   <button
     :class="{
-      'opacity-40': !isSelected,
+      'opacity-40': props.role !== roleSelected,
     }"
     @click="$emit('click')"
   >
