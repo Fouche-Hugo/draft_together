@@ -4,11 +4,10 @@ import ChampionTeam from "./ChampionTeam.vue";
 
 interface Props {
   champions: [Champion, Champion, Champion, Champion, Champion];
-  selectedIndex: number | null;
+  team: string;
 }
 
 const props = defineProps<Props>();
-defineEmits(["click"])
 </script>
 
 <template>
@@ -17,8 +16,8 @@ defineEmits(["click"])
       v-for="(champion, index) in props.champions"
       :key="champion.id"
       :champion
-      :is-selected="index === selectedIndex"
-      @click="$emit('click', index)"
+      :index
+      :team
     />
   </section>
 </template>

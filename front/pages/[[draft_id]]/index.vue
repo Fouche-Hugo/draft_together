@@ -40,6 +40,7 @@ function unfilter_champions() {
 }
 
 const selection: Ref<[string, number] | null> = ref(null);
+provide("selection", selection);
 </script>
 
 <template>
@@ -60,13 +61,6 @@ const selection: Ref<[string, number] | null> = ref(null);
         champions[3],
         champions[4],
       ]"
-      :selected-index="
-        selection?.[0] === 'BLUEBAN' || selection?.[0] === 'REDBAN'
-          ? selection
-          : null
-      "
-      @click-blue-ban="(index) => (selection = ['BLUEBAN', index])"
-      @click-red-ban="(index) => (selection = ['REDBAN', index])"
     />
     <main class="flex grow items-stretch overflow-scroll">
       <ChampionsTeam
@@ -78,7 +72,7 @@ const selection: Ref<[string, number] | null> = ref(null);
           champions[4],
         ]"
         :selected-index="selection?.[0] === 'BLUE' ? selection[1] : null"
-        @click="(index) => (selection = ['BLUE', index])"
+        team="BLUE"
       />
       <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-scroll px-4">
         <div class="flex justify-between gap-4">
@@ -145,7 +139,7 @@ const selection: Ref<[string, number] | null> = ref(null);
           champions[4],
         ]"
         :selected-index="selection?.[0] === 'RED' ? selection[1] : null"
-        @click="(index) => (selection = ['RED', index])"
+        team="RED"
       />
     </main>
     <DraftFooter />
