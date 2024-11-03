@@ -128,6 +128,26 @@ async fn main() {
         });
     }
 
+    {
+        let app_state = app_state.clone();
+        tokio::spawn(async move {
+            loop {
+                for draft in app_state.drafts.iter() {
+                    if let Err(e) = database::update_draft(&app_state.pool, &draft).await {
+                        error!("failed to update draft with id {}: {e}", draft.id);
+                    } else {
+                        info!(
+                            "draft with id: {} was successfully saved into database",
+                            draft.id
+                        );
+                    }
+                }
+
+                tokio::time::sleep(Duration::from_secs(30)).await
+            }
+        });
+    }
+
     let assets_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets");
     let app = Router::new()
         .fallback_service(ServeDir::new(assets_dir).append_index_html_on_directories(true))

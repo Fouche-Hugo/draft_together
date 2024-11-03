@@ -12,7 +12,7 @@ use draft_together_data::ChampionUpdate;
 use futures::{stream::SplitSink, SinkExt, StreamExt};
 use std::net::SocketAddr;
 use tokio::sync::broadcast::Sender;
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, info, trace, warn};
 use uuid::Uuid;
 
 use crate::{database, get_current_draft, get_current_draft_mut, AppState};
@@ -186,8 +186,8 @@ async fn update_database_if_last_client(
 
             debug!("no clients connected for draft with id {draft_id}, draft was removed from hashmaps");
         } else {
-            error!(
-                "error while trying to save draft with id {draft_id} to database: draft was None"
+            warn!(
+                "failed to save draft with id {draft_id} to database: draft was never loaded"
             );
         }
     }
