@@ -1,5 +1,5 @@
 export interface Champion {
-  id: string;
+  id: number;
   riot_id: string;
   name: string;
   default_skin_image_path: string;

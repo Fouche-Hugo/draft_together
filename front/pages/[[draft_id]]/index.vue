@@ -2,21 +2,38 @@
 import ChampionsTeam from "~/components/ChampionsTeam.vue";
 import { validate } from "uuid";
 import ChampionsSelector from "~/components/ChampionsSelector.vue";
+import type { Draft } from "~/server/draft";
 import type { Champion } from "~/server/champion";
 import DraftHeader from "~/components/DraftHeader.vue";
 import DraftFooter from "~/components/DraftFooter.vue";
 import SearchInput from "~/components/SearchInput.vue";
 import ChampionRoles from "~/components/ChampionRoles.vue";
 
-const { data } = await useFetch<Champion[]>("http://app:3000/champions");
-const champions = data.value !== null ? data.value : [];
-
 definePageMeta({
   validate: async (route) => {
-    console.log(route.params.draft_id);
     return validate(route.params.draft_id);
   },
 });
+
+const route = useRoute();
+const { data: champions_fetched } = await useFetch<Champion[]>(
+  "http://app:3000/champions",
+);
+const champions =
+  champions_fetched.value !== null ? champions_fetched.value : [];
+
+const { data: draft_fetched } = await useFetch<Draft>(
+  `http://app:3000/draft/${route.params.draft_id}`,
+);
+const draft: Ref<Draft> =
+  draft_fetched.value !== null
+    ? ref(draft_fetched.value)
+    : ref({
+        blue_champions: [null, null, null, null, null],
+        red_champions: [null, null, null, null, null],
+        blue_bans: [null, null, null, null, null],
+        red_bans: [null, null, null, null, null],
+      });
 
 const roleSelected: Ref<string | null> = ref(null);
 provide("roleSelected", roleSelected);
@@ -46,14 +63,13 @@ provide("selection", selection);
 <template>
   <div class="flex h-full flex-col items-stretch gap-4">
     <DraftHeader
-      v-if="champions !== null"
-      :blue-bans="[
-        champions[0],
-        champions[1],
-        champions[2],
-        champions[3],
-        champions[4],
-      ]"
+      :blue-bans="
+        draft.blue_bans.map((id) => {
+          return champions.find((champion) => {
+            return champion.id === id;
+          });
+        })
+      "
       :red-bans="[
         champions[0],
         champions[1],

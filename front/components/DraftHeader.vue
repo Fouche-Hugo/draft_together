@@ -3,8 +3,20 @@ import type { Champion } from "~/server/champion";
 import BansTeam from "./BansTeam.vue";
 
 interface Props {
-  blueBans: [Champion, Champion, Champion, Champion, Champion];
-  redBans: [Champion, Champion, Champion, Champion, Champion];
+  blueBans: [
+    Champion | null,
+    Champion | null,
+    Champion | null,
+    Champion | null,
+    Champion | null,
+  ];
+  redBans: [
+    Champion | null,
+    Champion | null,
+    Champion | null,
+    Champion | null,
+    Champion | null,
+  ];
 }
 
 const props = defineProps<Props>();
