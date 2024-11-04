@@ -3,3 +3,4 @@ dragontail-**.tgz
 dragontail-**/
 dragontail
 .env
+.pnpm-store

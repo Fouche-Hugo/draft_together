@@ -21,15 +21,16 @@ definePageMeta({
   },
 });
 
+const runtimeConfig = useRuntimeConfig();
 const route = useRoute();
 const { data: champions_fetched } = await useFetch<Champion[]>(
-  "http://app:3000/champions",
+  `${runtimeConfig.public.httpBaseAddress}champions`,
 );
 const champions =
   champions_fetched.value !== null ? champions_fetched.value : [];
 
 const { data: draft_fetched } = await useFetch<Draft>(
-  `http://app:3000/draft/${route.params.draft_id}`,
+  `${runtimeConfig.public.httpBaseAddress}draft/${route.params.draft_id}`,
 );
 const draft: Ref<Draft> =
   draft_fetched.value !== null
@@ -43,7 +44,7 @@ const draft: Ref<Draft> =
 
 let webSocket: WebSocket;
 if (import.meta.client) {
-  webSocket = new WebSocket(`ws://localhost:3636/ws/${route.params.draft_id}`);
+  webSocket = new WebSocket(`${runtimeConfig.public.wsBaseAddress}${route.params.draft_id}`);
   webSocket.onmessage = (event: MessageEvent<string>) => {
     draft.value = JSON.parse(event.data);
   };
