@@ -28,7 +28,15 @@ function updateSelection() {
   }
 }
 
-defineEmits(["dblclick"]);
+function onDrop(event: DragEvent) {
+  const championId = event.dataTransfer?.getData("championId");
+  if (championId !== null) {
+    const championIdNumber = Number(championId);
+    emit("drop", championIdNumber);
+  }
+}
+
+const emit = defineEmits(["dblclick", "drop"]);
 </script>
 
 <template>
@@ -38,6 +46,9 @@ defineEmits(["dblclick"]);
     :style="`background-image: url(${props.champion.centered_default_skin_image_path})`"
     @click="updateSelection"
     @dblclick="$emit('dblclick')"
+    @drop="onDrop($event)"
+    @dragover.prevent
+    @dragenter.prevent
   >
     <div
       class="absolute inset-0 border-zinc-100"
@@ -49,7 +60,14 @@ defineEmits(["dblclick"]);
       }"
     ></div>
   </button>
-  <button v-else class="relative bg-cover bg-top" @click="updateSelection">
+  <button
+    v-else
+    class="relative bg-cover bg-top"
+    @click="updateSelection"
+    @drop="onDrop($event)"
+    @dragover.prevent
+    @dragenter.prevent
+  >
     <div
       class="absolute inset-0 border"
       :class="{

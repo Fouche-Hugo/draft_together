@@ -53,7 +53,7 @@ if (import.meta.client) {
   webSocket.onerror = (error) => console.log("ws error: ", error);
 }
 
-function sendDraftUpdate(championId: number) {
+function sendDraftUpdateClick(championId: number) {
   if (selection.value !== null) {
     webSocket.send(
       JSON.stringify({
@@ -68,8 +68,21 @@ function sendDraftUpdate(championId: number) {
   }
 }
 
+function sendDraftUpdateDrop(
+  championId: number,
+  team: Team,
+  isBan: boolean,
+  index: number,
+) {
+  webSocket.send(
+    JSON.stringify({
+      champion_id: championId,
+      position: computePosition(team, index, isBan),
+    }),
+  );
+}
+
 function sendDraftChampionReset(team: Team, index: number, isBan: boolean) {
-  console.log("reset draft");
   webSocket.send(
     JSON.stringify({
       champion_id: null,
@@ -118,12 +131,20 @@ provide("selection", selection);
       :blue-bans="mapChampions(draft.blue_bans)"
       :red-bans="mapChampions(draft.red_bans)"
       @dblclick="(team, index) => sendDraftChampionReset(team, index, true)"
+      @drop="
+        (championId, team, index) =>
+          sendDraftUpdateDrop(championId, team, true, index)
+      "
     />
     <main class="flex grow items-stretch overflow-hidden">
       <ChampionsTeam
         :champions="mapChampions(draft.blue_champions)"
         :team="Team.Blue"
         @dblclick="(index) => sendDraftChampionReset(Team.Blue, index, false)"
+        @drop="
+          (championId, index) =>
+            sendDraftUpdateDrop(championId, Team.Blue, false, index)
+        "
       />
       <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-hidden px-4">
         <div class="flex justify-between gap-4">
@@ -133,13 +154,17 @@ provide("selection", selection);
         <ChampionsSelector
           :champions="filtered_champions"
           :search-input="searchInput"
-          @click="(id) => sendDraftUpdate(id)"
+          @click="(id) => sendDraftUpdateClick(id)"
         />
       </div>
       <ChampionsTeam
         :champions="mapChampions(draft.red_champions)"
         :team="Team.Red"
         @dblclick="(index) => sendDraftChampionReset(Team.Red, index, false)"
+        @drop="
+          (championId, index) =>
+            sendDraftUpdateDrop(championId, Team.Red, false, index)
+        "
       />
     </main>
     <DraftFooter />

@@ -26,6 +26,14 @@ watchEffect(() => {
         .includes(props.searchInput.toLowerCase());
     });
 });
+
+function startDrag(event: DragEvent, championId: number) {
+  if (event.dataTransfer !== null) {
+    event.dataTransfer.dropEffect = "copy";
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer?.setData("championId", championId.toString());
+  }
+}
 </script>
 
 <template>
@@ -33,6 +41,8 @@ watchEffect(() => {
     <div
       v-for="champion in sorted_champions"
       :key="champion.id"
+      draggable
+      @dragstart="startDrag($event, champion.id)"
       @click="$emit('click', champion.id)"
     >
       <img :src="champion.default_skin_image_path" />

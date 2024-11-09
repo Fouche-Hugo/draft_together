@@ -13,7 +13,7 @@ interface Props {
   team: Team;
 }
 
-defineEmits(['dblClick']);
+const emit = defineEmits(["dblClick", "drop"]);
 const props = defineProps<Props>();
 const selection: Ref<Selection | null> = inject("selection")!;
 
@@ -32,6 +32,14 @@ function updateSelection(index: number) {
     selection.value = null;
   }
 }
+
+function onDrop(event: DragEvent, index: number) {
+  const championId = event.dataTransfer?.getData("championId");
+  if (championId !== null) {
+    const championIdNumber = Number(championId);
+    emit("drop", championIdNumber, index);
+  }
+}
 </script>
 
 <template>
@@ -42,7 +50,15 @@ function updateSelection(index: number) {
         class="relative h-24 w-24 bg-cover"
         :style="`background-image: url(${champion.default_skin_image_path})`"
         @click="updateSelection(index)"
-        @dblclick="() => {console.log('dblClick'); $emit('dblClick', index)}"
+        @dblclick="
+          () => {
+            console.log('dblClick');
+            $emit('dblClick', index);
+          }
+        "
+        @drop="onDrop($event, index)"
+        @dragover.prevent
+        @dragenter.prevent
       >
         <div
           class="absolute inset-0 border-zinc-100"
@@ -58,6 +74,9 @@ function updateSelection(index: number) {
         v-else
         class="relative h-24 w-24 bg-cover"
         @click="updateSelection(index)"
+        @drop="onDrop($event, index)"
+        @dragover.prevent
+        @dragenter.prevent
       >
         <div
           class="absolute inset-0 border"
