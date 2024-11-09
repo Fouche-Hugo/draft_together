@@ -47,7 +47,7 @@ pub type ChampionId = i32;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChampionUpdate {
-    pub champion_id: ChampionId,
+    pub champion_id: Option<ChampionId>,
     pub position: ChampionPosition,
 }
 
@@ -73,26 +73,26 @@ impl Draft {
 
     pub fn update(&mut self, champion_update: &ChampionUpdate) {
         match champion_update.position {
-            ChampionPosition::Blue1 => self.blue_champions[0] = Some(champion_update.champion_id),
-            ChampionPosition::Blue2 => self.blue_champions[1] = Some(champion_update.champion_id),
-            ChampionPosition::Blue3 => self.blue_champions[2] = Some(champion_update.champion_id),
-            ChampionPosition::Blue4 => self.blue_champions[3] = Some(champion_update.champion_id),
-            ChampionPosition::Blue5 => self.blue_champions[4] = Some(champion_update.champion_id),
-            ChampionPosition::Red1 => self.red_champions[0] = Some(champion_update.champion_id),
-            ChampionPosition::Red2 => self.red_champions[1] = Some(champion_update.champion_id),
-            ChampionPosition::Red3 => self.red_champions[2] = Some(champion_update.champion_id),
-            ChampionPosition::Red4 => self.red_champions[3] = Some(champion_update.champion_id),
-            ChampionPosition::Red5 => self.red_champions[4] = Some(champion_update.champion_id),
-            ChampionPosition::BlueBan1 => self.blue_bans[0] = Some(champion_update.champion_id),
-            ChampionPosition::BlueBan2 => self.blue_bans[1] = Some(champion_update.champion_id),
-            ChampionPosition::BlueBan3 => self.blue_bans[2] = Some(champion_update.champion_id),
-            ChampionPosition::BlueBan4 => self.blue_bans[3] = Some(champion_update.champion_id),
-            ChampionPosition::BlueBan5 => self.blue_bans[4] = Some(champion_update.champion_id),
-            ChampionPosition::RedBan1 => self.red_bans[0] = Some(champion_update.champion_id),
-            ChampionPosition::RedBan2 => self.red_bans[1] = Some(champion_update.champion_id),
-            ChampionPosition::RedBan3 => self.red_bans[2] = Some(champion_update.champion_id),
-            ChampionPosition::RedBan4 => self.red_bans[3] = Some(champion_update.champion_id),
-            ChampionPosition::RedBan5 => self.red_bans[4] = Some(champion_update.champion_id),
+            ChampionPosition::Blue1 => self.blue_champions[0] = champion_update.champion_id,
+            ChampionPosition::Blue2 => self.blue_champions[1] = champion_update.champion_id,
+            ChampionPosition::Blue3 => self.blue_champions[2] = champion_update.champion_id,
+            ChampionPosition::Blue4 => self.blue_champions[3] = champion_update.champion_id,
+            ChampionPosition::Blue5 => self.blue_champions[4] = champion_update.champion_id,
+            ChampionPosition::Red1 => self.red_champions[0] = champion_update.champion_id,
+            ChampionPosition::Red2 => self.red_champions[1] = champion_update.champion_id,
+            ChampionPosition::Red3 => self.red_champions[2] = champion_update.champion_id,
+            ChampionPosition::Red4 => self.red_champions[3] = champion_update.champion_id,
+            ChampionPosition::Red5 => self.red_champions[4] = champion_update.champion_id,
+            ChampionPosition::BlueBan1 => self.blue_bans[0] = champion_update.champion_id,
+            ChampionPosition::BlueBan2 => self.blue_bans[1] = champion_update.champion_id,
+            ChampionPosition::BlueBan3 => self.blue_bans[2] = champion_update.champion_id,
+            ChampionPosition::BlueBan4 => self.blue_bans[3] = champion_update.champion_id,
+            ChampionPosition::BlueBan5 => self.blue_bans[4] = champion_update.champion_id,
+            ChampionPosition::RedBan1 => self.red_bans[0] = champion_update.champion_id,
+            ChampionPosition::RedBan2 => self.red_bans[1] = champion_update.champion_id,
+            ChampionPosition::RedBan3 => self.red_bans[2] = champion_update.champion_id,
+            ChampionPosition::RedBan4 => self.red_bans[3] = champion_update.champion_id,
+            ChampionPosition::RedBan5 => self.red_bans[4] = champion_update.champion_id,
         }
     }
 }

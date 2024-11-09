@@ -9,11 +9,20 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+defineEmits(["dblclick"]);
 </script>
 
 <template>
   <header class="flex min-h-[100px] items-stretch justify-between">
-    <BansTeam :champions="props.blueBans" :team="Team.Blue" />
-    <BansTeam :champions="props.redBans" :team="Team.Red" />
+    <BansTeam
+      :champions="props.blueBans"
+      :team="Team.Blue"
+      @dbl-click="(index) => $emit('dblclick', Team.Blue, index)"
+    />
+    <BansTeam
+      :champions="props.redBans"
+      :team="Team.Red"
+      @dbl-click="(index) => $emit('dblclick', Team.Red, index)"
+    />
   </header>
 </template>

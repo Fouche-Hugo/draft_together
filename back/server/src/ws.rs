@@ -128,24 +128,24 @@ async fn receive_draft_update(
 ) -> Result<()> {
     let champion_update: ChampionUpdate = serde_json::from_str(champion_update)?;
 
-    if app_state
-        .valid_champion_ids
-        .read()
-        .await
-        .contains(&champion_update.champion_id)
-    {
+    if let Some(champion_id) = champion_update.champion_id {
+        if !app_state
+            .valid_champion_ids
+            .read()
+            .await
+            .contains(&champion_id)
         {
-            let mut server_draft = get_current_draft_mut(app_state, draft_id).await?;
-            server_draft.draft.update(&champion_update);
+            error!("champion update was not valid: champion_id {champion_id} was not valid");
+            return Ok(());
         }
-        draft_tx.send(WsEvent::DraftUpdate)?;
-        debug!("{who} updated draft {draft_id} with {champion_update:?}");
-    } else {
-        error!(
-            "champion update was not valid: champion_id: {} was not valid",
-            champion_update.champion_id
-        );
     }
+
+    {
+        let mut server_draft = get_current_draft_mut(app_state, draft_id).await?;
+        server_draft.draft.update(&champion_update);
+    }
+    draft_tx.send(WsEvent::DraftUpdate)?;
+    debug!("{who} updated draft {draft_id} with {champion_update:?}");
 
     Ok(())
 }
@@ -186,9 +186,7 @@ async fn update_database_if_last_client(
 
             debug!("no clients connected for draft with id {draft_id}, draft was removed from hashmaps");
         } else {
-            warn!(
-                "failed to save draft with id {draft_id} to database: draft was never loaded"
-            );
+            warn!("failed to save draft with id {draft_id} to database: draft was never loaded");
         }
     }
     Ok(())

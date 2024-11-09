@@ -29,7 +29,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <section class="grid grid-cols-8 gap-3 overflow-scroll border-zinc-600">
+  <section class="grid grid-cols-8 gap-3 overflow-y-scroll border-zinc-600">
     <div
       v-for="champion in sorted_champions"
       :key="champion.id"

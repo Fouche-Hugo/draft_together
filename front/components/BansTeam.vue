@@ -13,6 +13,7 @@ interface Props {
   team: Team;
 }
 
+defineEmits(['dblClick']);
 const props = defineProps<Props>();
 const selection: Ref<Selection | null> = inject("selection")!;
 
@@ -41,6 +42,7 @@ function updateSelection(index: number) {
         class="relative h-24 w-24 bg-cover"
         :style="`background-image: url(${champion.default_skin_image_path})`"
         @click="updateSelection(index)"
+        @dblclick="() => {console.log('dblClick'); $emit('dblClick', index)}"
       >
         <div
           class="absolute inset-0 border-zinc-100"

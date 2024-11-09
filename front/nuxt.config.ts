@@ -10,6 +10,16 @@ export default defineNuxtConfig({
   modules: ["@nuxt/eslint", "@nuxtjs/tailwindcss"],
 
   runtimeConfig: {
-    public: { wsBaseAddress: "ws://localhost:3636/ws/", httpBaseAddress: 'http://localhost:3636/' },
+    public: {
+      wsBaseAddress: "ws://localhost:3636/ws/",
+      httpBaseAddress: "http://app:3000/",
+    },
+  },
+
+  postcss: {
+    plugins: {
+      autoprefixer: {},
+      cssnano: {},
+    },
   },
 });

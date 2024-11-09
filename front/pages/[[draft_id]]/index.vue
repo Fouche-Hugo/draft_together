@@ -44,7 +44,9 @@ const draft: Ref<Draft> =
 
 let webSocket: WebSocket;
 if (import.meta.client) {
-  webSocket = new WebSocket(`${runtimeConfig.public.wsBaseAddress}${route.params.draft_id}`);
+  webSocket = new WebSocket(
+    `${runtimeConfig.public.wsBaseAddress}${route.params.draft_id}`,
+  );
   webSocket.onmessage = (event: MessageEvent<string>) => {
     draft.value = JSON.parse(event.data);
   };
@@ -64,6 +66,16 @@ function sendDraftUpdate(championId: number) {
       }),
     );
   }
+}
+
+function sendDraftChampionReset(team: Team, index: number, isBan: boolean) {
+  console.log('reset draft')
+  webSocket.send(
+    JSON.stringify({
+      champion_id: null,
+      position: computePosition(team, index, isBan),
+    }),
+  );
 }
 
 function mapChampions(indexes: ChampionIdsList): ChampionsList {
@@ -105,13 +117,14 @@ provide("selection", selection);
     <DraftHeader
       :blue-bans="mapChampions(draft.blue_bans)"
       :red-bans="mapChampions(draft.red_bans)"
+      @dblclick="(team, index) => sendDraftChampionReset(team, index, true)"
     />
-    <main class="flex grow items-stretch overflow-scroll">
+    <main class="flex grow items-stretch overflow-hidden">
       <ChampionsTeam
         :champions="mapChampions(draft.blue_champions)"
         :team="Team.Blue"
       />
-      <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-scroll px-4">
+      <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-hidden px-4">
         <div class="flex justify-between gap-4">
           <ChampionRoles @click="(role) => filter_champions(role)" />
           <SearchInput v-model="searchInput" />
