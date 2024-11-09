@@ -31,7 +31,8 @@ function startDrag(event: DragEvent, championId: number) {
   if (event.dataTransfer !== null) {
     event.dataTransfer.dropEffect = "copy";
     event.dataTransfer.effectAllowed = "copy";
-    event.dataTransfer?.setData("championId", championId.toString());
+    event.dataTransfer.setData("championId", championId.toString());
+    event.dataTransfer.setData("origin", JSON.stringify(null));
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ChampionsList } from "~/server/champion";
 import ChampionTeam from "./ChampionTeam.vue";
-import type { Team } from "~/server/draft";
+import type { ChampionDropData, Team } from "~/server/draft";
 
 interface Props {
   champions: ChampionsList;
@@ -9,11 +9,14 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-defineEmits(["dblclick", "drop"]);
+defineEmits<{
+  dblclick: [index: number];
+  drop: [data: ChampionDropData];
+}>();
 </script>
 
 <template>
-  <section class="grid grow grid-cols-1">
+  <section class="grid grow grid-cols-1 h-full">
     <ChampionTeam
       v-for="(champion, index) in props.champions"
       :key="index"
@@ -21,7 +24,15 @@ defineEmits(["dblclick", "drop"]);
       :index
       :team
       @dblclick="$emit('dblclick', index)"
-      @drop="(championId) => $emit('drop', championId, index)"
+      @drop="
+        (newChampionId, currentChampionId, origin) =>
+          $emit('drop', {
+            newChampionId,
+            currentChampionId,
+            newPosition: { team, index, isBan: false },
+            origin,
+          })
+      "
     />
   </section>
 </template>

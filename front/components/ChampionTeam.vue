@@ -30,28 +30,63 @@ function updateSelection() {
 
 function onDrop(event: DragEvent) {
   const championId = event.dataTransfer?.getData("championId");
+  const origin = event.dataTransfer?.getData("origin");
   if (championId !== null) {
     const championIdNumber = Number(championId);
-    emit("drop", championIdNumber);
+    const originParsed: Selection | null = origin ? JSON.parse(origin) : null;
+
+    emit(
+      "drop",
+      championIdNumber,
+      props.champion ? props.champion.id : null,
+      originParsed,
+    );
   }
 }
 
-const emit = defineEmits(["dblclick", "drop"]);
+function startDrag(event: DragEvent) {
+  if (event.dataTransfer !== null && props.champion !== null) {
+    event.dataTransfer.dropEffect = "copy";
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("championId", props.champion.id.toString());
+
+    const origin: Selection = {
+      team: props.team,
+      index: props.index,
+      isBan: false,
+    };
+    event.dataTransfer.setData("origin", JSON.stringify(origin));
+  }
+}
+
+const emit = defineEmits<{
+  dblclick: [];
+  drop: [
+    newChampionId: number,
+    currentChampionId: number | null,
+    origin: Selection | null,
+  ];
+}>();
 </script>
 
 <template>
-  <button
+  <div
     v-if="props.champion !== null"
-    class="relative bg-cover bg-top"
-    :style="`background-image: url(${props.champion.centered_default_skin_image_path})`"
+    class="relative"
+    draggable
+    @dragstart="startDrag($event)"
     @click="updateSelection"
     @dblclick="$emit('dblclick')"
     @drop="onDrop($event)"
     @dragover.prevent
     @dragenter.prevent
   >
+    <img
+      :src="props.champion.centered_default_skin_image_path"
+      class="absolute inset-0 h-full w-full object-cover object-top"
+    />
     <div
-      class="absolute inset-0 border-zinc-100"
+      class="pointer-events-none absolute inset-0"
       :class="{
         border:
           !selection?.isBan &&
@@ -59,8 +94,8 @@ const emit = defineEmits(["dblclick", "drop"]);
           selection.team === props.team,
       }"
     ></div>
-  </button>
-  <button
+  </div>
+  <div
     v-else
     class="relative bg-cover bg-top"
     @click="updateSelection"
@@ -81,5 +116,5 @@ const emit = defineEmits(["dblclick", "drop"]);
           selection.team !== props.team,
       }"
     ></div>
-  </button>
+  </div>
 </template>

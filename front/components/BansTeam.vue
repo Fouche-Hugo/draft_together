@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Champion } from "~/server/champion";
-import type { Selection, Team } from "~/server/draft";
+import type { ChampionDropData, Selection, Team } from "~/server/draft";
 
 interface Props {
   champions: [
@@ -13,7 +13,10 @@ interface Props {
   team: Team;
 }
 
-const emit = defineEmits(["dblClick", "drop"]);
+const emit = defineEmits<{
+  dblclick: [index: number];
+  drop: [championDropData: ChampionDropData];
+}>();
 const props = defineProps<Props>();
 const selection: Ref<Selection | null> = inject("selection")!;
 
@@ -35,9 +38,37 @@ function updateSelection(index: number) {
 
 function onDrop(event: DragEvent, index: number) {
   const championId = event.dataTransfer?.getData("championId");
+  const origin = event.dataTransfer?.getData("origin");
   if (championId !== null) {
     const championIdNumber = Number(championId);
-    emit("drop", championIdNumber, index);
+    const originParsed: Selection | null = origin ? JSON.parse(origin) : null;
+    emit("drop", {
+      newChampionId: championIdNumber,
+      currentChampionId: props.champions[index]
+        ? props.champions[index].id
+        : null,
+      newPosition: {
+        team: props.team,
+        index,
+        isBan: true,
+      },
+      origin: originParsed,
+    });
+  }
+}
+
+function startDrag(event: DragEvent, championId: number, index: number) {
+  if (event.dataTransfer !== null) {
+    event.dataTransfer.dropEffect = "copy";
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("championId", championId.toString());
+    
+    const origin: Selection = {
+      team: props.team,
+      index: index,
+      isBan: true,
+    };
+    event.dataTransfer.setData("origin", JSON.stringify(origin));
   }
 }
 </script>
@@ -49,19 +80,20 @@ function onDrop(event: DragEvent, index: number) {
         v-if="champion !== null"
         class="relative h-24 w-24 bg-cover"
         :style="`background-image: url(${champion.default_skin_image_path})`"
+        draggable
+        @dragstart="startDrag($event, champion.id, index)"
         @click="updateSelection(index)"
-        @dblclick="
-          () => {
-            console.log('dblClick');
-            $emit('dblClick', index);
-          }
-        "
+        @dblclick="$emit('dblclick', index)"
         @drop="onDrop($event, index)"
         @dragover.prevent
         @dragenter.prevent
       >
+        <img
+          :src="champion.default_skin_image_path"
+          class="absolute inset-0 h-full w-full object-cover object-top"
+        />
         <div
-          class="absolute inset-0 border-zinc-100"
+          class="pointer-events-none absolute inset-0"
           :class="{
             border:
               selection?.isBan &&

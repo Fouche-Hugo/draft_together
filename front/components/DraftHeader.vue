@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ChampionsList } from "~/server/champion";
-import { Team } from "~/server/draft";
+import { Team, type ChampionDropData } from "~/server/draft";
 import BansTeam from "./BansTeam.vue";
 
 interface Props {
@@ -9,7 +9,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-defineEmits(["dblclick", "drop"]);
+defineEmits<{
+  dblclick: [team: Team, index: number];
+  drop: [championDropData: ChampionDropData];
+}>();
 </script>
 
 <template>
@@ -17,14 +20,14 @@ defineEmits(["dblclick", "drop"]);
     <BansTeam
       :champions="props.blueBans"
       :team="Team.Blue"
-      @dbl-click="(index) => $emit('dblclick', Team.Blue, index)"
-      @drop="(championId, index) => $emit('drop', championId, Team.Blue, index)"
+      @dblclick="(index) => $emit('dblclick', Team.Blue, index)"
+      @drop="(championDropData) => $emit('drop', championDropData)"
     />
     <BansTeam
       :champions="props.redBans"
       :team="Team.Red"
-      @dbl-click="(index) => $emit('dblclick', Team.Red, index)"
-      @drop="(championId, index) => $emit('drop', championId, Team.Red, index)"
+      @dblclick="(index) => $emit('dblclick', Team.Red, index)"
+      @drop="(championDropData) => $emit('drop', championDropData)"
     />
   </header>
 </template>
