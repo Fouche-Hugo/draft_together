@@ -27,6 +27,8 @@ function updateSelection() {
     selection.value = null;
   }
 }
+
+defineEmits(["dblclick"]);
 </script>
 
 <template>
@@ -35,6 +37,7 @@ function updateSelection() {
     class="relative bg-cover bg-top"
     :style="`background-image: url(${props.champion.centered_default_skin_image_path})`"
     @click="updateSelection"
+    @dblclick="$emit('dblclick')"
   >
     <div
       class="absolute inset-0 border-zinc-100"

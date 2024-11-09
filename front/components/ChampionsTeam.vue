@@ -9,6 +9,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+defineEmits(["dblclick"]);
 </script>
 
 <template>
@@ -19,6 +20,7 @@ const props = defineProps<Props>();
       :champion
       :index
       :team
+      @dblclick="$emit('dblclick', index)"
     />
   </section>
 </template>

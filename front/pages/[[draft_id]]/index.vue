@@ -69,7 +69,7 @@ function sendDraftUpdate(championId: number) {
 }
 
 function sendDraftChampionReset(team: Team, index: number, isBan: boolean) {
-  console.log('reset draft')
+  console.log("reset draft");
   webSocket.send(
     JSON.stringify({
       champion_id: null,
@@ -123,6 +123,7 @@ provide("selection", selection);
       <ChampionsTeam
         :champions="mapChampions(draft.blue_champions)"
         :team="Team.Blue"
+        @dblclick="(index) => sendDraftChampionReset(Team.Blue, index, false)"
       />
       <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-hidden px-4">
         <div class="flex justify-between gap-4">
@@ -138,6 +139,7 @@ provide("selection", selection);
       <ChampionsTeam
         :champions="mapChampions(draft.red_champions)"
         :team="Team.Red"
+        @dblclick="(index) => sendDraftChampionReset(Team.Red, index, false)"
       />
     </main>
     <DraftFooter />
