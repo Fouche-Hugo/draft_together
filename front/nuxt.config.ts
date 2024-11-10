@@ -25,8 +25,8 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Draft Together',
-      link: [{ rel: 'icon', type: 'image/png', href: "/logo.png" }]
-    }
-  }
+      title: "Draft Together",
+      link: [{ rel: "icon", type: "image/png", href: "/logo.png" }],
+    },
+  },
 });

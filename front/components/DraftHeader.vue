@@ -6,6 +6,7 @@ import BansTeam from "./BansTeam.vue";
 interface Props {
   blueBans: ChampionsList;
   redBans: ChampionsList;
+  link: string;
 }
 
 const props = defineProps<Props>();
@@ -23,6 +24,7 @@ defineEmits<{
       @dblclick="(index) => $emit('dblclick', Team.Blue, index)"
       @drop="(championDropData) => $emit('drop', championDropData)"
     />
+    <LinkButton :link />
     <BansTeam
       :champions="props.redBans"
       :team="Team.Red"

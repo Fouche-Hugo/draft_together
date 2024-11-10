@@ -1,9 +1,8 @@
 <template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="36"
-    height="36"
     viewBox="0 0 34 34"
+    class="h-5 sm:h-6 md:h-7 lg:h-9"
   >
     <path
       class="active"

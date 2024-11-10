@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Champion } from "~/server/champion";
-import type { Selection, Team } from "~/server/draft";
+import { Team, type Selection } from "~/server/draft";
 
 interface Props {
   champion: Champion | null;
@@ -67,6 +67,8 @@ const emit = defineEmits<{
     origin: Selection | null,
   ];
 }>();
+
+const isTeamBlue = props.team === Team.Blue;
 </script>
 
 <template>
@@ -116,5 +118,10 @@ const emit = defineEmits<{
           selection.team !== props.team,
       }"
     ></div>
+    <div
+      v-if="isTeamBlue"
+      class="absolute bottom-0 left-0 top-0 w-1 bg-blue-500"
+    ></div>
+    <div v-else class="absolute bottom-0 right-0 top-0 w-1 bg-red-500"></div>
   </div>
 </template>

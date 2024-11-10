@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Champion } from "~/server/champion";
-import type { ChampionDropData, Selection, Team } from "~/server/draft";
+import { Team, type ChampionDropData, type Selection } from "~/server/draft";
 
 interface Props {
   champions: [
@@ -62,7 +62,7 @@ function startDrag(event: DragEvent, championId: number, index: number) {
     event.dataTransfer.dropEffect = "copy";
     event.dataTransfer.effectAllowed = "copy";
     event.dataTransfer.setData("championId", championId.toString());
-    
+
     const origin: Selection = {
       team: props.team,
       index: index,
@@ -71,14 +71,17 @@ function startDrag(event: DragEvent, championId: number, index: number) {
     event.dataTransfer.setData("origin", JSON.stringify(origin));
   }
 }
+
+const isTeamRed = props.team === Team.Red;
+console.log(isTeamRed)
 </script>
 
 <template>
-  <div class="grid h-full grid-cols-5">
+  <div class="grid h-full grid-cols-3 md:grid-cols-5" :dir="isTeamRed ? 'rtl' : ''">
     <template v-for="(champion, index) in props.champions" :key="index">
       <button
         v-if="champion !== null"
-        class="relative h-24 w-24 bg-cover"
+        class="relative h-12 w-12 bg-cover md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-24 xl:w-24"
         :style="`background-image: url(${champion.default_skin_image_path})`"
         draggable
         @dragstart="startDrag($event, champion.id, index)"
@@ -104,7 +107,7 @@ function startDrag(event: DragEvent, championId: number, index: number) {
       </button>
       <button
         v-else
-        class="relative h-24 w-24 bg-cover"
+        class="relative h-12 w-12 bg-cover md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-24 xl:w-24"
         @click="updateSelection(index)"
         @drop="onDrop($event, index)"
         @dragover.prevent

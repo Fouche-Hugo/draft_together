@@ -22,6 +22,8 @@ definePageMeta({
   },
 });
 
+const url = useRequestURL();
+
 const runtimeConfig = useRuntimeConfig();
 const route = useRoute();
 const { data: champions_fetched } = await useFetch<Champion[]>(
@@ -143,6 +145,7 @@ provide("selection", selection);
     <DraftHeader
       :blue-bans="mapChampions(draft.blue_bans)"
       :red-bans="mapChampions(draft.red_bans)"
+      :link="url.toString()"
       @dblclick="(team, index) => sendDraftChampionReset(team, index, true)"
       @drop="(championDropData) => sendDraftUpdateDrop(championDropData)"
     />
@@ -153,7 +156,9 @@ provide("selection", selection);
         @dblclick="(index) => sendDraftChampionReset(Team.Blue, index, false)"
         @drop="(championDropData) => sendDraftUpdateDrop(championDropData)"
       />
-      <div class="flex w-2/5 flex-col items-stretch gap-4 overflow-hidden px-4">
+      <div
+        class="flex max-w-[350px] flex-col items-stretch gap-4 overflow-hidden px-4 sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[650px] 2xl:max-w-[800px]"
+      >
         <div class="flex justify-between gap-4">
           <ChampionRoles @click="(role) => filter_champions(role)" />
           <SearchInput v-model="searchInput" />
