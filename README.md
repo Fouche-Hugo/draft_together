@@ -17,6 +17,12 @@ This app is not affiliated with Riot Games.
 
 ## Tech stack
 
+Built using :
+
+- Rust with Axum for the backend
+- Nuxt for the frontend
+- Deployement via Docker Compose
+
 ## Development
 
 The easiest way to start a development environment is to use Docker Compose:
