@@ -1,5 +1,6 @@
 use draft_together_data::{Champion, ChampionRole, Draft};
-use sqlx::{prelude::FromRow, query, query_as, types::Json, PgPool};
+use semver::Version;
+use sqlx::{postgres::PgRow, prelude::FromRow, query, query_as, types::Json, PgPool};
 use uuid::Uuid;
 
 use crate::ServerDraft;
@@ -97,6 +98,27 @@ pub struct ChampionDatabaseInsertion {
     pub name: String,
     pub default_skin_image_path: String,
     pub centered_default_skin_image_path: String,
+}
+
+#[derive(Debug, FromRow)]
+struct VersionTable {
+    pub current: String,
+}
+
+pub async fn get_current_version(pool: &PgPool) -> Result<Option<Version>, sqlx::Error> {
+    let version: Option<VersionTable> = query_as("SELECT current FROM version")
+        .fetch_optional(pool)
+        .await?;
+
+    Ok(version.map(|version| semver::Version::parse(&version.current).unwrap()))
+}
+
+pub async fn update_current_version(pool: &PgPool, version: &Version) -> Result<(), sqlx::Error> {
+    query("INSERT INTO version (id, current) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET current = $1")
+        .bind(version.to_string())
+        .execute(pool).await?;
+
+    Ok(())
 }
 
 pub async fn query_champions(pool: &PgPool) -> Result<Vec<ChampionDatabase>, sqlx::Error> {

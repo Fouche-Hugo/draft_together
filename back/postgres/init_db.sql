@@ -31,3 +31,8 @@ CREATE TABLE draft (
     red_4 INTEGER REFERENCES champion(id),
     red_5 INTEGER REFERENCES champion(id)
 );
+
+CREATE TABLE version (
+    id SERIAL PRIMARY KEY,
+    current VARCHAR(30)
+)
