@@ -73,7 +73,6 @@ function startDrag(event: DragEvent, championId: number, index: number) {
 }
 
 const isTeamRed = props.team === Team.Red;
-console.log(isTeamRed)
 </script>
 
 <template>
