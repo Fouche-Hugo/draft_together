@@ -157,7 +157,7 @@ provide("selection", selection);
         @drop="(championDropData) => sendDraftUpdateDrop(championDropData)"
       />
       <div
-        class="flex max-w-[350px] flex-col items-stretch gap-4 overflow-hidden px-4 sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[650px] 2xl:max-w-[800px]"
+        class="flex max-w-[280px] flex-col items-stretch gap-4 overflow-hidden px-4 sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[650px] 2xl:max-w-[800px]"
       >
         <div class="flex justify-between gap-4">
           <ChampionRoles @click="(role) => filter_champions(role)" />
