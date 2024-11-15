@@ -46,14 +46,24 @@ const draft: Ref<Draft> =
       });
 
 let webSocket: WebSocket;
-if (import.meta.client) {
+function wsConnect() {
   webSocket = new WebSocket(
     `${runtimeConfig.public.wsBaseAddress}${route.params.draft_id}`,
   );
   webSocket.onmessage = (event: MessageEvent<string>) => {
     draft.value = JSON.parse(event.data);
   };
-  webSocket.onerror = (error) => console.log("ws error: ", error);
+  webSocket.onerror = (error) => {
+    console.log("ws error: ", error);
+    webSocket.close();
+  };
+  webSocket.onclose = () => {
+    setTimeout(wsConnect, 1000);
+  };
+}
+
+if (import.meta.client) {
+  wsConnect();
 }
 
 function sendDraftUpdateClick(championId: number) {
