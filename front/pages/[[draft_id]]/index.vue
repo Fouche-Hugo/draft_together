@@ -167,10 +167,13 @@ provide("selection", selection);
         @drop="(championDropData) => sendDraftUpdateDrop(championDropData)"
       />
       <div
-        class="flex max-w-[280px] flex-col items-stretch gap-4 overflow-hidden px-4 sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[650px] 2xl:max-w-[800px]"
+        class="flex w-[280px] flex-col items-stretch gap-4 overflow-hidden px-4 sm:w-[400px] md:w-[500px] lg:w-[600px] xl:w-[650px] 2xl:w-[800px]"
       >
-        <div class="flex justify-between gap-4">
-          <ChampionRoles @click="(role) => filter_champions(role)" />
+        <div class="flex flex-col sm:flex-row justify-between gap-4">
+          <ChampionRoles
+            class="self-center"
+            @click="(role) => filter_champions(role)"
+          />
           <SearchInput v-model="searchInput" />
         </div>
         <ChampionsSelector
