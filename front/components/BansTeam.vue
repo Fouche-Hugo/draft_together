@@ -76,7 +76,10 @@ const isTeamRed = props.team === Team.Red;
 </script>
 
 <template>
-  <div class="grid h-full grid-cols-3 md:grid-cols-5" :dir="isTeamRed ? 'rtl' : ''">
+  <div
+    class="grid h-full grid-cols-3 md:grid-cols-5"
+    :dir="isTeamRed ? 'rtl' : ''"
+  >
     <template v-for="(champion, index) in props.champions" :key="index">
       <button
         v-if="champion !== null"
@@ -90,8 +93,9 @@ const isTeamRed = props.team === Team.Red;
         @dragover.prevent
         @dragenter.prevent
       >
-        <img
+        <NuxtImg
           :src="champion.default_skin_image_path"
+          format="webp"
           class="absolute inset-0 h-full w-full object-cover object-top"
         />
         <div

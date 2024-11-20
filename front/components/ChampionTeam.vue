@@ -83,8 +83,9 @@ const isTeamBlue = props.team === Team.Blue;
     @dragover.prevent
     @dragenter.prevent
   >
-    <img
+    <NuxtImg
       :src="props.champion.centered_default_skin_image_path"
+      format="webp"
       class="absolute inset-0 h-full w-full object-cover object-top"
     />
     <div

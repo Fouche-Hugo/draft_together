@@ -38,7 +38,9 @@ function startDrag(event: DragEvent, championId: number) {
 </script>
 
 <template>
-  <section class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-3 overflow-y-scroll border-zinc-600">
+  <section
+    class="grid grid-cols-4 gap-3 overflow-y-scroll border-zinc-600 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9"
+  >
     <div
       v-for="champion in sorted_champions"
       :key="champion.id"
@@ -46,7 +48,7 @@ function startDrag(event: DragEvent, championId: number) {
       @dragstart="startDrag($event, champion.id)"
       @click="$emit('click', champion.id)"
     >
-      <img :src="champion.default_skin_image_path" />
+      <NuxtImg format="webp" :src="champion.default_skin_image_path" />
     </div>
   </section>
 </template>
