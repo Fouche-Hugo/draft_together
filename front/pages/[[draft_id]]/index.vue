@@ -151,11 +151,12 @@ provide("selection", selection);
 </script>
 
 <template>
-  <div class="flex h-full flex-col items-stretch gap-4">
+  <div id="draft" class="flex h-full flex-col items-stretch gap-4">
     <DraftHeader
       :blue-bans="mapChampions(draft.blue_bans)"
       :red-bans="mapChampions(draft.red_bans)"
       :link="url.toString()"
+      imageHtmlElementId="draft"
       @dblclick="(team, index) => sendDraftChampionReset(team, index, true)"
       @drop="(championDropData) => sendDraftUpdateDrop(championDropData)"
     />
@@ -169,7 +170,7 @@ provide("selection", selection);
       <div
         class="flex w-[280px] flex-col items-stretch gap-4 overflow-hidden px-4 sm:w-[400px] md:w-[500px] lg:w-[600px] xl:w-[650px] 2xl:w-[800px]"
       >
-        <div class="flex flex-col sm:flex-row justify-between gap-4">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row">
           <ChampionRoles
             class="self-center"
             @click="(role) => filter_champions(role)"

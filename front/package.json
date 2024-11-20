@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^0.6.1",
+    "html-to-image": "^1.11.11",
     "nuxt": "^3.13.2",
     "typescript-eslint": "^8.12.2",
     "uuid": "^11.0.2",

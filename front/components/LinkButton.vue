@@ -27,7 +27,7 @@ async function copyURL() {
 
 <template>
   <button
-    class="h-min rounded-lg bg-zinc-700 p-1 px-3 py-2 text-center text-sm font-medium hover:bg-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+    class="h-min rounded-lg bg-zinc-700 px-2 py-1 text-center text-sm font-medium hover:bg-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 sm:px-3 sm:py-2"
     title="Copy Draft Link"
     @click="copyURL()"
   >
