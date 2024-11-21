@@ -1,6 +1,6 @@
 use draft_together_data::{Champion, ChampionRole, Draft};
 use semver::Version;
-use sqlx::{postgres::PgRow, prelude::FromRow, query, query_as, types::Json, PgPool};
+use sqlx::{prelude::FromRow, query, query_as, types::Json, PgPool};
 use uuid::Uuid;
 
 use crate::ServerDraft;
