@@ -25,7 +25,8 @@ const text = defineModel<string>();
     </div>
     <input
       v-model="text"
-      class="grow border border-zinc-500 bg-transparent ps-10 text-lg text-zinc-300 focus:border-zinc-300 focus:outline-none w-0"
+      aria-label="search"
+      class="w-0 grow border border-zinc-500 bg-transparent ps-10 text-lg text-zinc-300 focus:border-zinc-300 focus:outline-none"
       type="search"
     />
   </div>

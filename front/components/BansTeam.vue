@@ -87,6 +87,7 @@ const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
         v-if="champion !== null"
         class="relative h-12 w-12 bg-cover md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-24 xl:w-24"
         :style="`background-image: url(${champion.default_skin_image_path})`"
+        :aria-label="`ban ${index}: ${champion.name}`"
         draggable
         @dragstart="startDrag($event, champion.id, index)"
         @click="updateSelection(index)"
@@ -97,6 +98,7 @@ const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
       >
         <NuxtImg
           :src="`${imageBaseUrl}${champion.default_skin_image_path}`"
+          :alt="champion.name"
           format="webp"
           class="absolute inset-0 h-full w-full object-cover object-top"
         />
@@ -113,6 +115,7 @@ const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
       <button
         v-else
         class="relative h-12 w-12 bg-cover md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-24 xl:w-24"
+        :aria-label="`ban ${index}`"
         @click="updateSelection(index)"
         @drop="onDrop($event, index)"
         @dragover.prevent

@@ -52,6 +52,7 @@ const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
     >
       <NuxtImg
         format="webp"
+        :alt="champion.name"
         :src="`${imageBaseUrl}${champion.default_skin_image_path}`"
       />
     </div>

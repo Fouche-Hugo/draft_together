@@ -4,6 +4,7 @@ useSeoMeta({
   ogTitle: "Draft Together",
   description: "Draft with your friends easily.",
   ogDescription: "Draft with your friends easily.",
+  ogImage: "/logo.png",
 });
 </script>
 

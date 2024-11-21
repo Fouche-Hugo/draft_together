@@ -27,6 +27,9 @@ export default defineNuxtConfig({
     head: {
       title: "Draft Together",
       link: [{ rel: "icon", type: "image/png", href: "/logo.png" }],
+      htmlAttrs: {
+        lang: "en",
+      },
     },
   },
 

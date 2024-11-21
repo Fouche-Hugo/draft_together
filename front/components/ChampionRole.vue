@@ -12,6 +12,7 @@ const roleSelected: Ref<string | null> = inject("roleSelected")!;
 
 <template>
   <button
+    :aria-label="props.role"
     :class="{
       'opacity-40': props.role !== roleSelected,
     }"

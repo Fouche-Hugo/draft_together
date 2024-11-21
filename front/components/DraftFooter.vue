@@ -5,6 +5,7 @@
       href="https://github.com/Fouche-Hugo/draft_together"
       target="_blank"
       class="cursor-pointer"
+      aria-label="github link"
       ><svg
         width="34"
         height="32"
