@@ -33,4 +33,10 @@ export default defineNuxtConfig({
   build: {
     transpile: ["vue-toastification"],
   },
+
+  image: {
+    domains: process.env.NUXT_IMAGE_DOMAIN
+      ? process.env.NUXT_IMAGE_DOMAINS?.split(",")
+      : [],
+  },
 });
