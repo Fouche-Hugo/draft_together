@@ -69,6 +69,8 @@ const emit = defineEmits<{
 }>();
 
 const isTeamBlue = props.team === Team.Blue;
+const url = useRequestURL();
+const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
 </script>
 
 <template>
@@ -84,7 +86,7 @@ const isTeamBlue = props.team === Team.Blue;
     @dragenter.prevent
   >
     <NuxtImg
-      :src="props.champion.centered_default_skin_image_path"
+      :src="`${imageBaseUrl}${props.champion.centered_default_skin_image_path}`"
       format="webp"
       class="absolute inset-0 h-full w-full object-cover object-top"
     />

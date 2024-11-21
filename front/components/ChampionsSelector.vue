@@ -35,6 +35,8 @@ function startDrag(event: DragEvent, championId: number) {
     event.dataTransfer.setData("origin", JSON.stringify(null));
   }
 }
+const url = useRequestURL();
+const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
 </script>
 
 <template>
@@ -48,7 +50,10 @@ function startDrag(event: DragEvent, championId: number) {
       @dragstart="startDrag($event, champion.id)"
       @click="$emit('click', champion.id)"
     >
-      <NuxtImg format="webp" :src="champion.default_skin_image_path" />
+      <NuxtImg
+        format="webp"
+        :src="`${imageBaseUrl}${champion.default_skin_image_path}`"
+      />
     </div>
   </section>
 </template>

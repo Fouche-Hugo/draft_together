@@ -73,6 +73,8 @@ function startDrag(event: DragEvent, championId: number, index: number) {
 }
 
 const isTeamRed = props.team === Team.Red;
+const url = useRequestURL();
+const imageBaseUrl = `${url.protocol}//${url.hostname}/`;
 </script>
 
 <template>
@@ -94,7 +96,7 @@ const isTeamRed = props.team === Team.Red;
         @dragenter.prevent
       >
         <NuxtImg
-          :src="champion.default_skin_image_path"
+          :src="`${imageBaseUrl}${champion.default_skin_image_path}`"
           format="webp"
           class="absolute inset-0 h-full w-full object-cover object-top"
         />
