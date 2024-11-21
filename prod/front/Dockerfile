@@ -1,6 +1,9 @@
 
 FROM guergeiro/pnpm:22-8 as base
 
+ARG NUXT_IMAGE_DOMAINS=
+ENV NUXT_IMAGE_DOMAINS=$NUXT_IMAGE_DOMAINS
+
 WORKDIR /draft_together
 COPY ./front .
 
